@@ -31,7 +31,7 @@ class NodeController extends Controller
 		$type_node->setName("terme");
 		*/
 
-/*		$relation = new Relation();
+		$relation = new Relation();
 		$em->persist($relation);
 		$relation->setNode1(1);
 		$relation->setNode2(2);
@@ -43,7 +43,7 @@ class NodeController extends Controller
 		$type_relation->setName("isa");
 		
         
-        $em->flush();*/
+        $em->flush();
 
  
       return $this->render('node/index.html.twig');
