@@ -1,6 +1,6 @@
 <?php
 
-namespace um\jdmapi\jdmapiBundle\Entity;
+namespace UM\jdmapiBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Relation_type
  *
  * @ORM\Table(name="relation_type")
- * @ORM\Entity(repositoryClass="um\jdmapi\jdmapiBundle\Repository\Relation_typeRepository")
+ * @ORM\Entity(repositoryClass="UM\jdmapiBundle\Repository\Relation_typeRepository")
  */
 class Relation_type
 {

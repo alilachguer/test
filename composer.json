@@ -6,7 +6,7 @@
     "autoload": {
         "psr-4": {
             "AppBundle\\": "src/AppBundle",
-            "um\\jdmapi\\jdmapiBundle\\": "src/um/jdmapi/jdmapiBundle"
+            "UM\\JdmapiBundle\\": "src/UM/JdmapiBundle"
         },
         "classmap": [ "app/AppKernel.php", "app/AppCache.php" ]
     },

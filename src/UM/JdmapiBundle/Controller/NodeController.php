@@ -1,15 +1,15 @@
 <?php
 
-namespace um\jdmapi\jdmapiBundle\Controller;
+namespace UM\jdmapiBundle\Controller;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use um\jdmapi\jdmapiBundle\Entity\node;
-use um\jdmapi\jdmapiBundle\Entity\Type_node;
-use um\jdmapi\jdmapiBundle\Entity\Relation;
-use um\jdmapi\jdmapiBundle\Entity\Relation_type;
+use UM\jdmapiBundle\Entity\node;
+use UM\jdmapiBundle\Entity\Type_node;
+use UM\jdmapiBundle\Entity\Relation;
+use UM\jdmapiBundle\Entity\Relation_type;
 
 class NodeController extends Controller
 {
@@ -31,7 +31,7 @@ class NodeController extends Controller
 		$type_node->setName("terme");
 		*/
 
-		$relation = new Relation();
+/*		$relation = new Relation();
 		$em->persist($relation);
 		$relation->setNode1(1);
 		$relation->setNode2(2);
@@ -43,9 +43,9 @@ class NodeController extends Controller
 		$type_relation->setName("isa");
 		
         
-        $em->flush();
+        $em->flush();*/
 
  
-      return $this->render('jdmapiBundle:Node:index.html.twig');
+      return $this->render('node/index.html.twig');
     }
 }

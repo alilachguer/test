@@ -1,7 +1,0 @@
-jdmapi_homepage:
-    path:     /jdmapi
-    defaults: { _controller: jdmapiBundle:Default:index }
-
-jdmapi_nodepage:
-    path:     /node
-    defaults: { _controller: jdmapiBundle:Node:index }

@@ -1,5 +1,5 @@
 jdmapi:
-    resource: "@jdmapiBundle/Resources/config/routing.yml"
+    resource: "@JdmapiBundle/Resources/config/routing.yml"
     prefix:   /
 
 app:
