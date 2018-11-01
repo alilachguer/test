@@ -1,15 +1,15 @@
 <?php
 
-namespace UM\jdmapiBundle\Controller;
+namespace UM\JdmapiBundle\Controller;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use UM\jdmapiBundle\Entity\node;
-use UM\jdmapiBundle\Entity\Type_node;
-use UM\jdmapiBundle\Entity\Relation;
-use UM\jdmapiBundle\Entity\Relation_type;
+use UM\JdmapiBundle\Entity\node;
+use UM\JdmapiBundle\Entity\Type_node;
+use UM\JdmapiBundle\Entity\Relation;
+use UM\JdmapiBundle\Entity\Relation_type;
 
 class NodeController extends Controller
 {
@@ -31,19 +31,19 @@ class NodeController extends Controller
 		$type_node->setName("terme");
 		*/
 
-		$relation = new Relation();
-		$em->persist($relation);
-		$relation->setNode1(1);
-		$relation->setNode2(2);
-		$relation->setTypeRelation(1);
-		$relation->setWeight(10);
+		// $relation = new Relation();
+		// $em->persist($relation);
+		// $relation->setNode1(1);
+		// $relation->setNode2(2);
+		// $relation->setTypeRelation(1);
+		// $relation->setWeight(10);
 
-		$type_relation = new Relation_type();
-		$em->persist($type_relation);
-		$type_relation->setName("isa");
+		// $type_relation = new Relation_type();
+		// $em->persist($type_relation);
+		// $type_relation->setName("isa");
 		
         
-        $em->flush();
+        // $em->flush();
 
  
       return $this->render('node/index.html.twig');

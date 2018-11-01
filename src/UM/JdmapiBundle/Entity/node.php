@@ -1,6 +1,6 @@
 <?php
 
-namespace UM\jdmapiBundle\Entity;
+namespace UM\JdmapiBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 

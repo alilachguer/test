@@ -1,6 +1,6 @@
 <?php
 
-namespace UM\jdmapiBundle\DependencyInjection;
+namespace UM\JdmapiBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;

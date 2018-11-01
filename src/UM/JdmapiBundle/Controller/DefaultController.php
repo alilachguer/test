@@ -1,6 +1,6 @@
 <?php
 
-namespace UM\jdmapiBundle\Controller;
+namespace UM\JdmapiBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
