@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * node
  *
  * @ORM\Table(name="node")
- * @ORM\Entity(repositoryClass="UM\jdmapiBundle\Repository\nodeRepository")
+ * @ORM\Entity(repositoryClass="UM\JdmapiBundle\Repository\nodeRepository")
  */
 class node
 {
@@ -31,8 +31,8 @@ class node
     /**
      * @var int
      *
-     * @ORM\Column(name="type", type="integer")
-     * @ORM\ManyToOne(targetEntity="Type_node", inversedBy="id")
+     * @ORM\Column(name="type_id", type="integer")
+     * @ORM\ManyToOne(targetEntity="Node_type", inversedBy="id")
      */
     private $type;
 

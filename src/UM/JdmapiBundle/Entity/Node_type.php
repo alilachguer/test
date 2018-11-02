@@ -5,12 +5,12 @@ namespace UM\JdmapiBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Type_node
+ * Node_type
  *
- * @ORM\Table(name="type_node")
- * @ORM\Entity(repositoryClass="UM\jdmapiBundle\Repository\Type_nodeRepository")
+ * @ORM\Table(name="node_type")
+ * @ORM\Entity(repositoryClass="UM\JdmapiBundle\Repository\Node_typeRepository")
  */
-class Type_node
+class Node_type
 {
     /**
      * @var int
@@ -24,9 +24,9 @@ class Type_node
     /**
      * @var string
      *
-     * @ORM\Column(name="name", type="string", length=255, unique=true)
+     * @ORM\Column(name="type", type="string", length=255, unique=true)
      */
-    private $name;
+    private $type;
 
 
     /**
@@ -40,27 +40,27 @@ class Type_node
     }
 
     /**
-     * Set name
+     * Set type
      *
      * @param string $name
      *
-     * @return Type_node
+     * @return Node_type
      */
-    public function setName($name)
+    public function setType($type)
     {
-        $this->name = $name;
+        $this->type = $type;
 
         return $this;
     }
 
     /**
-     * Get name
+     * Get type
      *
      * @return string
      */
-    public function getName()
+    public function getType()
     {
-        return $this->name;
+        return $this->type;
     }
 }
 

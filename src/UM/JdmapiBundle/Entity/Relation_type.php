@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Relation_type
  *
  * @ORM\Table(name="relation_type")
- * @ORM\Entity(repositoryClass="UM\jdmapiBundle\Repository\Relation_typeRepository")
+ * @ORM\Entity(repositoryClass="UM\JdmapiBundle\Repository\Relation_typeRepository")
  */
 class Relation_type
 {

@@ -7,7 +7,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use UM\JdmapiBundle\Entity\node;
-use UM\JdmapiBundle\Entity\Type_node;
+use UM\JdmapiBundle\Entity\Node_type;
 use UM\JdmapiBundle\Entity\Relation;
 use UM\JdmapiBundle\Entity\Relation_type;
 
@@ -16,7 +16,11 @@ class NodeController extends Controller
 
     public function indexAction()
     {
-    	$em = $this->getDoctrine()->getManager();
+    	return $this->render('node/index.html.twig');
+	}
+	
+	public function createAction(){
+		$em = $this->getDoctrine()->getManager();
 
         /*$node = new node();
         $em->persist($node);
@@ -44,8 +48,5 @@ class NodeController extends Controller
 		
         
         // $em->flush();
-
- 
-      return $this->render('node/index.html.twig');
-    }
+	}
 }

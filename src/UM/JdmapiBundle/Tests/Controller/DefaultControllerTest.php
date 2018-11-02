@@ -1,6 +1,6 @@
 <?php
 
-namespace UM\jdmapiBundle\Tests\Controller;
+namespace UM\JdmapiBundle\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 

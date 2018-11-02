@@ -5,3 +5,11 @@ jdmapi_homepage:
 jdmapi_nodepage:
     path:     /node
     defaults: { _controller: JdmapiBundle:Node:index }
+
+jdmapi_showNodeById:
+    path: /jdmapi/nodeid/{nodeid}
+    defaults: { _controller: JdmapiBundle:Default:showNodeById }
+
+jdmapi_getNodeByNmae:
+    path: /jdmapi/node/{nodename}
+    defaults: { _controller: JdmapiBundle:Default:getNodeByName }

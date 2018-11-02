@@ -1,6 +1,6 @@
 <?php
 
-namespace UM\jdmapiBundle\Repository;
+namespace UM\JdmapiBundle\Repository;
 
 /**
  * RelationRepository
