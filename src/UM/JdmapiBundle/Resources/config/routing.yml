@@ -21,18 +21,54 @@ jdmapi_batch:
 
 # Route du script d'insertion des nodes
 jdmapi_batch_node:
-    path:     /batch/node/insert/{relid}
+    path:     /batch/node/insert/{urlencodedterm}/{reltype}/{relid}
     defaults: { _controller: JdmapiBundle:Batch:insertNodes,
-                relid: 0  # absence d'ID de relation
+                urlencodedterm: 'cheval',
+                reltype: 'both',
+                relid: 0
               }
     requirements:
-        relid: \d+
+        urlencodedterm: '.+'
+        reltype: 'both|none|relin|relout'
+        relid: '\d+'
 
 # Route du script d'insertion des relations
 jdmapi_batch_relation:
-    path:     /batch/rel/insert/{relid}
+    path:     /batch/rel/insert/{urlencodedterm}/{reltype}/{relid}
     defaults: { _controller: JdmapiBundle:Batch:insertRels,
-                relid: 0   # absence d'ID de relation
+                urlencodedterm: 'ornithorynque',
+                reltype: 'both',
+                relid: 0
               }
     requirements:
-        relid: \d+
+         urlencodedterm: '.+'
+         reltype: 'both|none|relin|relout'
+         relid: '\d+'
+
+# Route de l'action déclenchant l'insertion des nodes et/ou des relations
+# pour le terme passé en paramètre {node}
+jdmapi_batch_custom:
+    path:     /batch/insert/{type}/{urlencodedterm}/{reltype}/{relid}
+    defaults: { _controller: JdmapiBundle:Batch:insertNodesAndRels,
+                type: 'all',   # insertion Nodes + Relation
+                urlencodedterm: 'diplodocus',
+                reltype: 'both',
+                relid: 0
+              }
+    requirements:
+        type: 'all|node|rel'
+        urlencodedterm: '.+'
+        reltype: 'both|none|relin|relout'
+        relid: '\d+'
+
+# Route du script d'insertion des nodes/relations d'après une liste de termes
+# présents dans un fichier .txt
+jdmapi_batch_terms:
+    path:     /batch/terms/insert/{type}/{reltype}
+    defaults: { _controller: JdmapiBundle:Batch:insertFromTermList,
+                type: 'all',  # insertion Nodes + Relation
+                reltype: 'both'
+              }
+    requirements:
+        type: 'all|node|rel'
+        reltype: 'both|none|relin|relout'
