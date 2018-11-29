@@ -22,31 +22,30 @@ class NodeController extends Controller
 	public function createAction(){
 		$em = $this->getDoctrine()->getManager();
 
-        /*$node = new node();
+        $node = new node();
         $em->persist($node);
         $node->setType(1);
         $node->setName("chien");
         $node->setWeight(50);
         $node->setFormattedName("chientformated");
-		*/
 
-		/*$type_node = new Type_node();
+		$type_node = new Type_node();
 		$em->persist($type_node);
 		$type_node->setName("terme");
-		*/
 
-		// $relation = new Relation();
-		// $em->persist($relation);
-		// $relation->setNode1(1);
-		// $relation->setNode2(2);
-		// $relation->setTypeRelation(1);
-		// $relation->setWeight(10);
 
-		// $type_relation = new Relation_type();
-		// $em->persist($type_relation);
-		// $type_relation->setName("isa");
+		 $relation = new Relation();
+		 $em->persist($relation);
+		 $relation->setNode1(1);
+		 $relation->setNode2(2);
+		 $relation->setTypeRelation(1);
+		 $relation->setWeight(10);
+
+		 $type_relation = new Relation_type();
+		 $em->persist($type_relation);
+		 $type_relation->setName("isa");
 		
         
-        // $em->flush();
+         $em->flush();
 	}
 }
