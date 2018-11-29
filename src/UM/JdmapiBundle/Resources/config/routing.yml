@@ -13,3 +13,26 @@ jdmapi_showNodeById:
 jdmapi_getNodeByNmae:
     path: /jdmapi/node/{nodename}
     defaults: { _controller: JdmapiBundle:Default:getNodeByName }
+
+# Route de test
+jdmapi_batch:
+    path:     /batch
+    defaults: { _controller: JdmapiBundle:Batch:index }
+
+# Route du script d'insertion des nodes
+jdmapi_batch_node:
+    path:     /batch/node/insert/{relid}
+    defaults: { _controller: JdmapiBundle:Batch:insertNodes,
+                relid: 0  # absence d'ID de relation
+              }
+    requirements:
+        relid: \d+
+
+# Route du script d'insertion des relations
+jdmapi_batch_relation:
+    path:     /batch/rel/insert/{relid}
+    defaults: { _controller: JdmapiBundle:Batch:insertRels,
+                relid: 0   # absence d'ID de relation
+              }
+    requirements:
+        relid: \d+
