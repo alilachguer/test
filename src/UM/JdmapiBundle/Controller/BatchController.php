@@ -70,7 +70,7 @@ class BatchController extends Controller
                 }
             }
         }
-        return $this->render('@Jdmapi/batch/insertFromTermsList.html.twig', array("buffer" => $this->buffer));
+        return $this->render('@Jdmapi/batch/insertfromtermslist.html.twig', array("buffer" => $this->buffer));
     }
 
     /*
@@ -83,12 +83,15 @@ class BatchController extends Controller
     public function insertNodesAndRelsAction(Request $request, String $type, String $urlencodedterm, String $reltype, Int $relid = 0)
     {
         if ('rel' !==  $type) {
+            $this->buffer .= "<p>Inserting Nodes</p>";
             $this->insertNodesAction($request, $urlencodedterm, $reltype, $relid);
         }
         if ('node' !==  $type) {
+            $this->buffer .= "<p>Inserting Relation(s)</p>";
             $this->insertRelsAction($request, $urlencodedterm, $reltype, $relid);
         }
-     }
+        return $this->render('@Jdmapi/batch/insertnodesandrels.html.twig', array("buffer" => $this->buffer));
+    }
 
     /*
      * Requête rezo-dump avec un terme et un paramètrage optionnel des relations
@@ -244,11 +247,6 @@ class BatchController extends Controller
 
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
-        echo "<pre>";
-        print_r($url);
-        echo "</pre>";
-        exit();
-
         // Ciblage explicite d'une relation par son ID
         if (isset($relid) && $relid > 0) {
             $url .= "&rel={$relid}";
@@ -264,6 +262,12 @@ class BatchController extends Controller
             }
         }
 
+        /*echo "<pre>";
+        print_r($url);
+        echo "</pre>";
+        exit();*/
+
+
         // réglage de timeout pour file_get_contents avec
         // backup et restauration de la valeur existante
         // après l'opération
@@ -274,22 +278,29 @@ class BatchController extends Controller
         // Conversion de l'encodage de la page source en UTF-8
         $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
 
-        echo "<pre>";
+/*        echo "<pre>";
         print_r($src);
         echo "</pre>";
-        exit();
+        exit();*/
 
-        // Get node EID
-        $node_id_pattern = "/\(eid=(\d+)\)/";
-        $matches = array();
+        try {
 
-        $matched = preg_match($node_id_pattern, $src,$matches);
-
-        if ($matched) {
-            $query_node_id = $matches[1];
+            // Get node EID
+            $node_id_pattern = "/\(eid=(\d+)\)/";
             $matches = array();
-        } else {
-            throw new \Exception("Le Node ID du mot n'a pas été trouvé dans le code source.");
+
+            $matched = preg_match($node_id_pattern, $src,$matches);
+
+            if ($matched) {
+                $query_node_id = $matches[1];
+                $matches = array();
+            } else {
+                throw new \Exception("Le Node ID du mot n'a pas été trouvé dans le code source.");
+            }
+        }
+        catch (\Exception $e) {
+            $this->buffer .= $e->getMessage();
+            return 0;
         }
 
         $rels_types =  array(0, 1, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 32, 35, 36, 41, 42, 45, 46, 51, 52, 53, 58, 59, 60, 64, 66, 67, 69, 72, 73, 74, 102, 106, 107, 109, 115, 126, 128, 151, 155, 333, 444, 555, 666, 777, 999, 1002, 2000);
@@ -400,7 +411,7 @@ class BatchController extends Controller
                         $weight = $relationData[3] ?? null;
 
                         $this->buffer .="<p>Relation ID = $id_relation<br />";
-                        $this->buffer .="Relation \$$id_node2 = $id_node2<br />";
+                        $this->buffer .="Relation \$id_node2 = $id_node2<br />";
                         $this->buffer .="Relation \$weight = $weight</p>";
 
                         $insertStmt->bindValue(1, /*id*/ $id_relation);

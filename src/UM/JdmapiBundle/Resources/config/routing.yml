@@ -28,7 +28,7 @@ jdmapi_batch_node:
                 relid: 0
               }
     requirements:
-        urlencodedterm: '.+'
+        urlencodedterm: '[^/]+'
         reltype: 'both|none|relin|relout'
         relid: '\d+'
 
@@ -41,7 +41,7 @@ jdmapi_batch_relation:
                 relid: 0
               }
     requirements:
-         urlencodedterm: '.+'
+         urlencodedterm: '[^/]+'
          reltype: 'both|none|relin|relout'
          relid: '\d+'
 
@@ -57,7 +57,7 @@ jdmapi_batch_custom:
               }
     requirements:
         type: 'all|node|rel'
-        urlencodedterm: '.+'
+        urlencodedterm: '[^/]+'
         reltype: 'both|none|relin|relout'
         relid: '\d+'
 
