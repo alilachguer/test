@@ -48,7 +48,7 @@ doctrine:
         password: '%database_password%'
         charset: UTF8
         memory: false
-        path: %kernel.root_dir%/sqlite.db.cache
+#        path: %kernel.root_dir%/sqlite.db.cache
         # if using pdo_sqlite as your database driver:
         #   1. add the path in parameters.yml
         #     e.g. database_path: '%kernel.project_dir%/var/data/data.sqlite'

@@ -56,7 +56,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         }
 
         // Filtrage par type des relations actif
-        if (!empty($relTypes) && preg_match($patternIdSet, $relTypes && "all" !== $relTypes)) {
+        if (!empty($relTypes) && preg_match($patternIdSet, $relTypes) && "all" !== $relTypes) {
             $filterRelType = "true";
         }
 
@@ -91,7 +91,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
                 if (!$excludeRelin) {
                     // $from .= ", relation RI ";
-                    $from .= " LEFT JOIN relation RI ON RI.id_node2 = N.id ";
+                    $from .= " LEFT JOIN relation RI ON N.id = RI.id_node2 ";
                     // $where .= "RI.id_node2 = N.id";
                 } else {
                     $excludeRelin = "true"; // String pour clé tableau stockage Statement
@@ -102,7 +102,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                         $where .= " OR ";
                     }
                     $from .= ", relation RO ";*/
-                    $from .= " LEFT JOIN relation RO ON RO.id_node = N.id ";
+                    $from .= " LEFT JOIN relation RO ON N.id = RO.id_node ";
                     // $where .= "RO.id_node = N.id";
                 } else {
                     $excludeRelout = "true"; // String pour clé tableau stockage Statement
@@ -143,7 +143,9 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection] = $stmt;
         }
 
-//        var_dump($stmt->fetchAll());
+        echo "<pre>";
+        var_dump($stmt->fetchAll());
+        echo "</pre>";
 //        exit();
 
         return $stmt->fetchAll();
