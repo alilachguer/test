@@ -8,9 +8,9 @@ use Doctrine\ORM\Mapping as ORM;
  * node
  *
  * @ORM\Table(name="node")
- * @ORM\Entity(repositoryClass="UM\JdmapiBundle\Repository\nodeRepository")
+ * @ORM\Entity(repositoryClass="UM\JdmapiBundle\Repository\NodeRepository")
  */
-class node
+class Node
 {
     /**
      * @var int

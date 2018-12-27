@@ -20,10 +20,31 @@ class BatchController extends Controller
         return $this->render('@Jdmapi/batch/index.html.twig');
     }
 
-    public function insertFromTermListAction(Request $request, String $type, String $reltype) {
+    public function setMaxResourcesState() {
+
+        // Relèvement temporaire des limites de mémoire et de temps d'exécution
+        // pour le processus courant. Les valeurs initiales sont recueillies
+        // pour être rétablies après l'opération.
+        $max_execution_time = ini_get('max_execution_time');
+        $memory_limit = ini_get('memory_limit');
+        ini_set('max_execution_time', 60*15);
+        ini_set('memory_limit', "1000M");
+        return array("max_execution_time" => $max_execution_time, "memory_limit" => $memory_limit);
+    }
+
+    public function resetResourcesStateToPrevious(array $previousState) {
+
+        // Rétabli les valeurs préexistantes des directives
+        ini_set('max_execution_time', $previousState["max_execution_time"]);
+        ini_set('memory_limit', $previousState["memory_limit"]);
+    }
+
+    public function insertFromTermListAction(Request $request, String $type, String $relDir) {
 
         if (is_dir($this->termListFilePath) && is_readable($this->termListFilePath)) {
             $d = dir($this->termListFilePath);
+
+            $previousState = $this->setMaxResourcesState();
 
             while (false !== ($entry = $d->read())) {
 
@@ -64,11 +85,20 @@ class BatchController extends Controller
                     for ($i = 0; $i < $nbrWords; $i++) {
                         $word = $words[$i];
                         echo "<p>\$word = ". urlencode($word) ."</p>";
-                        $this->insertNodesAndRelsAction($request, $type, urlencode($word), $reltype, 0);
+
+                        try {
+                            $this->insertNodesAndRelsAction($request, $type, urlencode($word), $relDir, 0);
+                        }
+                        catch (\PDOException $e) {
+                            $this->buffer .= 'Some insertions were skipped: ' . $e->getMessage();
+                        }
                     }
 
                 }
             }
+            // Rétabli les valeurs préexistantes des directives
+            $this->resetResourcesStateToPrevious($previousState);
+
         }
         return $this->render('@Jdmapi/batch/insertfromtermslist.html.twig', array("buffer" => $this->buffer));
     }
@@ -77,27 +107,48 @@ class BatchController extends Controller
      * Requête rezo-dump avec un terme et un paramètrage optionnel des relations
      * liées à celui-ci et lance l'insertion et la mise à jour dans la base de donnée (selon paramètre $type) :
      * - des termes résultant
-     * - des relations résultantes entrantes et ou sortantes selon le paramètre $reltype
+     * - des relations résultantes entrantes et ou sortantes selon le paramètre $relDir
      *  et la valeur du paramètre $relid.
     */
-    public function insertNodesAndRelsAction(Request $request, String $type, String $urlencodedterm, String $reltype, Int $relid = 0)
+    public function insertNodesAndRelsAction(Request $request, String $type, String $urlencodedterm, String $relDir = "*",
+                                             Int $relid = 0, Bool $returnresults = false)
     {
-        if ('rel' !==  $type) {
-            $this->buffer .= "<p>Inserting Nodes</p>";
-            $this->insertNodesAction($request, $urlencodedterm, $reltype, $relid);
+        $previousState = $this->setMaxResourcesState();
+
+        try {
+            if ('rel' !==  $type) {
+                $this->buffer .= "<p>Inserting Nodes</p>";
+                $nodes = $this->insertNodesAction($request, $urlencodedterm, $relDir, $relid, $returnresults);
+            }
+            if ('node' !==  $type) {
+                $this->buffer .= "<p>Inserting Relation(s)</p>";
+                $rels = $this->insertRelsAction($request, $urlencodedterm, $relDir, $relid, $returnresults);
+            }
+
+        } catch (\PDOException $e) {
+            $this->buffer .= 'Some insertions were skipped: ' . $e->getMessage();
         }
-        if ('node' !==  $type) {
-            $this->buffer .= "<p>Inserting Relation(s)</p>";
-            $this->insertRelsAction($request, $urlencodedterm, $reltype, $relid);
+
+        // Rétabli les valeurs préexistantes des directives
+        $this->resetResourcesStateToPrevious($previousState);
+
+        // Mode applicatif fonctionnel : renvoi des résultats
+        if (true === $returnresults) {
+            return array("nodes" => $nodes, "rels" => $rels);
         }
-        return $this->render('@Jdmapi/batch/insertnodesandrels.html.twig', array("buffer" => $this->buffer));
+        // Mode batch : affichage d'un récapitulatif
+        else {
+            return $this->render('@Jdmapi/batch/insertnodesandrels.html.twig', array("buffer" => $this->buffer));
+        }
     }
 
     /*
      * Requête rezo-dump avec un terme et un paramètrage optionnel des relations
      * liées à celui-ci. Insère et mets à jour les termes résultant dans la base de donnée.
+     * Si $returnresults = true, renvoi les nodes classés par type dans un tableau.
      */
-    public function insertNodesAction(Request $request, String $urlencodedterm, String $reltype, Int $relid = 0)
+    public function insertNodesAction(Request $request, String $urlencodedterm, String $relDir = "*", Int $relid = 0,
+                                      Bool $returnresults = false)
     {
         $this->buffer .= "<p>Begin source parsing for nodes</p>";
 
@@ -109,11 +160,11 @@ class BatchController extends Controller
         }
         else {
             // Exclusion des relations entrantes
-            if (in_array($reltype, array("relout", "none"))) {
+            if (in_array($relDir, array("relout", "none"))) {
                 $url .= "&relin=norelin";
             }
             // Exclusion des relations sortantes
-            if (in_array($reltype, array("relin", "none"))) {
+            if (in_array($relDir, array("relin", "none"))) {
                 $url .= "&relout=norelout";
             }
         }
@@ -163,6 +214,9 @@ class BatchController extends Controller
         }
 
         try {
+//            var_dump($this->getDoctrine());
+//            exit();
+
             // Connexion à la base de donnée
             if (($em = $this->get('doctrine')->getManager()) != null) {
 
@@ -208,12 +262,17 @@ class BatchController extends Controller
                         $formattedName = $nodeData[5] ?? null;
 
                         $this->buffer .= "<p>Node ID = {$nodeData[1]}<br />";
-                        $this->buffer .= "Node \$name = $name<br />";
+                        //$decodedName = $this->convertUtf8codes(urldecode($name));
+                        $decodedName = trim(urldecode($name), " \t\n\r\0\x0B'");
+                        $decodedName = $this->convertUtf8codes($decodedName);
+                        //$decodedName = $em->getConnection()->quote($decodedName);
+
+                        //$this->buffer .= "Node \$decodedName = "+ $decodedName +"<br />";
                         $this->buffer .= "Node \$weight = $weight<br />";
                         $this->buffer .= "Node \$formattedName = $formattedName</p>";
 
                         $insertStmt->bindValue(1, /*id*/ $nodeData[1]);
-                        $insertStmt->bindValue(2, /*name*/ $name);
+                        $insertStmt->bindValue(2, /*name*/ $decodedName);
                         $insertStmt->bindValue(3, /*type*/ $typeId);
                         $insertStmt->bindValue(4, /*weight*/ $weight);
                         $insertStmt->bindValue(5, /*formatted_name*/ $formattedName);
@@ -229,19 +288,30 @@ class BatchController extends Controller
             }
 
         } catch (\PDOException $e) {
-            $this->buffer .= 'Connection failed: ' . $e->getMessage();
+            echo "<p>Inserting of word « $decodedName » has thrown an exception : '". $e->getMessage() ."'.</p>";
+            $this->buffer .= 'Some insertions were skipped: ' . $e->getMessage();
         }
 
-        return $this->render('@Jdmapi/batch/insertnodes.html.twig', array("buffer" => $this->buffer));
-    }
+        // Renvoi les nodes classés par type si demandé (mode fonctionnel applicatif)
+        if (true === $returnresults) {
+            return $nodes_from_types;
+        }
+        // Affiche un récupitalatif (mode batch d'insertion seul)
+        else {
+            return $this->render('@Jdmapi/batch/insertnodes.html.twig', array("buffer" => $this->buffer));
+        }
+
+     }
 
 
     /*
      * Requête rezo-dump avec un terme et un paramètrage optionnel des relations liées à celui-ci.
      * Insère et mets à jour les relations résultantes dans la base de donnée
-     * optionnellement filtrées selon le paramètre $reltype et la valeur du paramètre $relid.
+     * optionnellement filtrées selon le paramètre $relDir et la valeur du paramètre $relid.
+     * Si $returnresults = true, renvoi les relations classés par type dans un tableau.
      */
-    public function insertRelsAction(Request $request, String $urlencodedterm, String $reltype, Int $relid = 0)
+    public function insertRelsAction(Request $request, String $urlencodedterm, String $relDir = "*", Int $relid = 0,
+                                     Bool $returnresults = false)
     {
         $this->buffer = "<p>Begin source parsing</p>";
 
@@ -253,11 +323,11 @@ class BatchController extends Controller
         }
         else {
             // Exclusion des relations entrantes
-            if (in_array($reltype, array("relout", "none"))) {
+            if (in_array($relDir, array("relout", "none"))) {
                 $url .= "&relin=norelin";
             }
             // Exclusion des relations sortantes
-            if (in_array($reltype, array("relin", "none"))) {
+            if (in_array($relDir, array("relin", "none"))) {
                 $url .= "&relout=norelout";
             }
         }
@@ -426,15 +496,72 @@ class BatchController extends Controller
 
             }
             else {
-                //$this->buffer .='Whoops, could not connect to the SQLite database!';
                 $this->buffer .='Whoops, could not connect to the MySQL database!';
             }
 
         } catch (\PDOException $e) {
-            $this->buffer .='Connection failed: ' . $e->getMessage();
+            $this->buffer .='Some insertions were skipped: ' . $e->getMessage();
         }
 
-        return $this->render('@Jdmapi/batch/insertrels.html.twig', array("buffer" => $this->buffer));
-    }
+        // Renvoi dans un tableau les relations entrantes et sortantes classées par type (mode fonctionnel applicatif)
+        if (true === $returnresults) {
+            return array("incoming" => $incoming_rels_from_types, "outgoing" => $outgoing_rels_from_types);
+        }
+        // Affiche un récupitalatif (mode batch d'insertion seul)
+        else {
+            return $this->render('@Jdmapi/batch/insertrels.html.twig', array("buffer" => $this->buffer));
+        }
+
+   }
+
+   public static function convertUtf8codes(string $word) {
+
+        $pattern = "/\x{0000}-\x{ffff}/u";
+        $match = array();
+        $return = $word;
+
+       echo "<p>\$word in convertUtf8codes = $word</p>";
+
+        while (preg_match($pattern, $word,$match)) {
+
+            $codePoint = $match[0];
+            $hexa = substr($codePoint, 4);
+
+            echo "<p>\$word = $word</p>";
+            echo "<p>\$codePoint = $codePoint</p>";
+            echo "<p>\$hexa = $hexa</p>";
+
+            $ascii = hexdec($hexa);
+
+            echo "<p>\$ascii = $ascii</p>";
+
+            if (is_int($ascii)) {
+                $char = chr($ascii);
+                $return = str_replace($hexa, $char, $word);
+            } else {
+                continue;
+            }
+        }
+       echo "<p>\$return = $return</p>";
+
+       return $return;
+
+//        $search = array(
+//            "\\u009c",
+//            "\\u00e8"
+//        );
+//       $replace = array(
+//           "œ",
+//           "è"
+//       );
+//       return str_replace($search, $replace, $word);
+   }
+
+
+   public function __invoke($call)
+   {
+       var_dump($call);
+       return $this;
+   }
 
 }

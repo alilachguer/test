@@ -10,4 +10,93 @@ namespace UM\JdmapiBundle\Repository;
  */
 class RelationRepository extends \Doctrine\ORM\EntityRepository
 {
+    protected $stmts = array();
+
+    /*
+     * Renvoie les relations entrantes d'un noeud d'ID $nodeId
+     */
+    public function getRelin(Int $nodeId, array $typeIds = array())
+    {
+        $em = $this->getEntityManager();
+        $conn = $em->getConnection();
+
+        // Filtrage par type de relation ou pas
+        if (!empty($typeIds)) {
+            $stmtName = "getRels";
+            $typeCondition = "";
+        } else {
+            $stmtName = "getRelsByType";
+            $typeCondition = " AND id_type IN(". implode(",", $typeIds . ")");
+        }
+
+        if (isset($this->stmts["getRelin"]) && is_object($this->stmts["getRelin"])
+            && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts["getRelin"])) {
+            $stmt = $this->stmts["getRelin"];
+
+        } else {
+            $sql = "SELECT id_node, id_type, weight FROM relation R WHERE id_node2 = ? $typeCondition";
+            $stmt = $conn->executeQuery($sql, array($nodeId));
+            $this->stmts["getRelin"] = $stmt;
+        }
+        return $stmt->fetchAll();
+    }
+
+    /*
+    * Renvoie les relations sortantes d'un noeud d'ID $nodeId
+    */
+    public function getRelout(Int $nodeId, array $typeIds = array())
+    {
+        $em = $this->getEntityManager();
+        $conn = $em->getConnection();
+
+        // Filtrage par type de relation ou pas
+        if (!empty($typeIds)) {
+            $stmtName = "getRels";
+            $typeCondition = "";
+        } else {
+            $stmtName = "getRelsByType";
+            $typeCondition = " AND id_type IN(". implode(",", $typeIds . ")");
+        }
+
+        if (isset($this->stmts["getRelout"]) && is_object($this->stmts["getRelout"])
+            && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts["getRelout"])) {
+            $stmt = $this->stmts["getRelout"];
+
+        } else {
+            $sql = "SELECT id_node2, id_type, weight FROM relation R WHERE id_node = ? $typeCondition";
+            $stmt = $conn->executeQuery($sql, array($nodeId));
+            $this->stmts["getRelout"] = $stmt;
+        }
+        return $stmt->fetchAll();
+    }
+
+    /*
+    * Renvoie les relations sortantes et sortantes d'un noeud d'ID $nodeId
+    */
+    public function getRels(Int $nodeId, array $typeIds = array())
+    {
+        $em = $this->getEntityManager();
+        $conn = $em->getConnection();
+
+        // Filtrage par type de relation ou pas
+        if (!empty($typeIds)) {
+            $stmtName = "getRels";
+            $typeCondition = "";
+        } else {
+            $stmtName = "getRelsByType";
+            $typeCondition = " AND id_type IN(". implode(",", $typeIds . ")");
+        }
+
+        if (isset($this->stmts[$stmtName]) && is_object($this->stmts[$stmtName])
+            && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts[$stmtName])) {
+             $stmt = $this->stmts["getRels"];
+
+        } else {
+            $sql = "SELECT id_node2, id_type, weight FROM relation R WHERE id_node = ? OR id_node2 = ? $typeCondition";
+
+            $stmt = $conn->executeQuery($sql, array($nodeId, $nodeId));
+            $this->stmts[$stmtName] = $stmt;
+        }
+        return $stmt->fetchAll();
+    }
 }

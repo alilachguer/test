@@ -33,3 +33,19 @@ services:
     # AppBundle\Service\ExampleService:
     #     arguments:
     #         $someArgument: 'some_value'
+
+    # makes classes in src/UM/JdmapiBundle available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    UM\JdmapiBundle\:
+        resource: '../../src/UM/JdmapiBundle/*'
+        # you can exclude directories or files
+        # but if a service is unused, it's removed anyway
+        exclude: '../../src/UM/JdmapiBundle/{Entity,Repository,Tests}'
+
+    # controllers are imported separately to make sure they're public
+    # and have a tag that allows actions to type-hint services
+    UM\JdmapiBundle\Controller\:
+        resource: '../../src/UM/JdmapiBundle/Controller'
+        public: true
+        tags: ['controller.service_arguments']
+

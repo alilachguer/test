@@ -1,11 +1,12 @@
 <?php
 
 namespace UM\JdmapiBundle\Controller;
+
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
-
-
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+
 use UM\JdmapiBundle\Entity\node;
 use UM\JdmapiBundle\Entity\Node_type;
 use UM\JdmapiBundle\Entity\Relation;
@@ -13,6 +14,16 @@ use UM\JdmapiBundle\Entity\Relation_type;
 
 class NodeController extends Controller
 {
+    protected $defaultExcludeRelin = false;
+    protected $defaultExcludeRelout = false;
+    protected $batchService;
+
+//    public function __construct()
+//    {
+//        parent::__contruct();
+//        $this->batchService =
+//
+//    }
 
     public function indexAction()
     {
@@ -48,4 +59,104 @@ class NodeController extends Controller
         
          $em->flush();
 	}
+
+	/*
+	 * Requête JDMAPI portant sur un terme
+	 * */
+	public function getAction(Request $request, String $urlencodedterm, $filter = "both", Int $returnresults = 1) {
+
+	    /*
+	     *  Test de présence du mot dans la base locale
+	     */
+        $em = $this->getDoctrine()->getManager();
+        $excludeRelin = $this->defaultExcludeRelin;
+        $excludeRelout = $this->defaultExcludeRelout;
+
+        if (!is_array($filter)) {
+            $filter = array("relDir" => (array) $filter);
+        }
+
+        // Exclusion des relations entrantes ou sortantes
+        if (isset($filter["relDir"]) && is_array($filter["relDir"]) && !empty($filter["relDir"])) {
+
+            if (in_array($filter["relDir"], array("relout", "none"))) {
+                $excludeRelout = true;
+            }
+            if (in_array($filter["relDir"], array("relin", "none"))) {
+                $excludeRelin = true;
+            }
+        }
+
+        // Filtrage par types de relations
+        if (isset($filter["relTypes"]) && is_array($filter["relTypes"]) && !empty($filter["relTypes"])) {
+
+        }
+
+        $id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
+
+        // Le terme est présent dans la base locale : requête la base locale
+        if (is_numeric($id) && $id > 0) {
+
+            echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+
+            $results = $em->getRepository("JdmapiBundle:Node")->get($urlencodedterm, $excludeRelout, $excludeRelin, $filter);
+        }
+        // Le terme n'est pas présent dans la base locale : requête sur le site distant
+        else {
+
+            echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
+
+            $results = $this->getRemote($request, $urlencodedterm, $excludeRelout, $excludeRelin);
+        }
+
+        // Renvoi les données récupérées pour le noeud (mode fonctionnel applicatif)
+        if (1 === $returnresults) {
+            return $results;
+        }
+        // Affiche un récupitalatif (mode debug)
+        else {
+            return $this->render('@Jdmapi/node/get.html.twig', array("results" => $results));
+        }
+   }
+
+   /*
+    * Requête JDMAPI portant sur un terme à récupérer sur rezo-dump
+    * en utilisant le service Batch représenté par le BatchController
+    * */
+    public function getRemote(Request $request, String $urlencodedterm, $excludeRelin, $excludeRelout) {
+
+        $relDir = "*";
+
+        // Exclusion des relations entrantes et sortantes
+        if (true == $excludeRelin && true == $excludeRelout) {
+            $relDir = "none";
+        }
+        // Exclusion des relations entrantes
+        elseif (true == $excludeRelin) {
+            $relDir = "relout";
+        }
+        // Exclusion des relations sortantes
+        elseif (true == $excludeRelout) {
+            $relDir = "relin";
+        }
+
+//        $batchService = $this->get("UM\JdmapiBundle\Controller\BatchController");
+//        $results = $batchService->insertNodesAndRelsAction($request, "", $urlencodedterm, $relType, 0, true);
+
+        $results = $this->forward("JdmapiBundle:Batch:insertNodesAndRels", array(
+            "request" => $request,
+            "type" => "",
+            "urlencodedterm" => $urlencodedterm,
+            "relDir" => $relDir,
+            "relid" => 0,
+            "returnresults" => true
+        ));
+        return  array("test" => "Its a test");
+        return $results;
+    }
+
+
+
+
+
 }

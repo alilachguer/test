@@ -7,12 +7,25 @@ jdmapi_nodepage:
     defaults: { _controller: JdmapiBundle:Node:index }
 
 jdmapi_showNodeById:
-    path: /jdmapi/nodeid/{nodeid}
+    path:     /jdmapi/nodeid/{nodeid}
     defaults: { _controller: JdmapiBundle:Default:showNodeById }
 
-jdmapi_getNodeByNmae:
-    path: /jdmapi/node/{nodename}
+jdmapi_getNodeByName:
+    path:     /jdmapi/node/{nodename}
     defaults: { _controller: JdmapiBundle:Default:getNodeByName }
+
+# Requête d'un mot par l'utilisateur
+jdmapi_getnode:
+    path:     /node/get/{urlencodedterm}/{filter}/{returnresults}
+    defaults: { _controller: JdmapiBundle:Node:get,
+                urlencodedterm: 'cheval',
+                filter: 'both',
+                returnresults: 1
+              }
+    requirements:
+        urlencodedterm: '[^/]+'
+        filter: 'both|none|relin|relout|(\d+,*)+'
+        return: '0|1'
 
 # Route de test
 jdmapi_batch:
@@ -21,54 +34,68 @@ jdmapi_batch:
 
 # Route du script d'insertion des nodes
 jdmapi_batch_node:
-    path:     /batch/node/insert/{urlencodedterm}/{reltype}/{relid}
+    path:     /batch/node/insert/{urlencodedterm}/{reldir}/{relid}
     defaults: { _controller: JdmapiBundle:Batch:insertNodes,
                 urlencodedterm: 'cheval',
-                reltype: 'both',
+                reldir: 'both',
                 relid: 0
               }
     requirements:
         urlencodedterm: '[^/]+'
-        reltype: 'both|none|relin|relout'
+        reldir: 'both|none|relin|relout'
         relid: '\d+'
 
 # Route du script d'insertion des relations
 jdmapi_batch_relation:
-    path:     /batch/rel/insert/{urlencodedterm}/{reltype}/{relid}
+    path:     /batch/rel/insert/{urlencodedterm}/{reldir}/{relid}
     defaults: { _controller: JdmapiBundle:Batch:insertRels,
                 urlencodedterm: 'ornithorynque',
-                reltype: 'both',
+                reldir: 'both',
                 relid: 0
               }
     requirements:
          urlencodedterm: '[^/]+'
-         reltype: 'both|none|relin|relout'
+         reldir: 'both|none|relin|relout'
          relid: '\d+'
 
 # Route de l'action déclenchant l'insertion des nodes et/ou des relations
 # pour le terme passé en paramètre {node}
 jdmapi_batch_custom:
-    path:     /batch/insert/{type}/{urlencodedterm}/{reltype}/{relid}
+    path:     /batch/insert/{type}/{urlencodedterm}/{reldir}/{relid}
     defaults: { _controller: JdmapiBundle:Batch:insertNodesAndRels,
                 type: 'all',   # insertion Nodes + Relation
                 urlencodedterm: 'diplodocus',
-                reltype: 'both',
+                reldir: 'both',
                 relid: 0
               }
     requirements:
         type: 'all|node|rel'
         urlencodedterm: '[^/]+'
-        reltype: 'both|none|relin|relout'
+        reldir: 'both|none|relin|relout'
         relid: '\d+'
 
 # Route du script d'insertion des nodes/relations d'après une liste de termes
 # présents dans un fichier .txt
 jdmapi_batch_terms:
-    path:     /batch/terms/insert/{type}/{reltype}
+    path:     /batch/terms/insert/{type}/{reldir}
     defaults: { _controller: JdmapiBundle:Batch:insertFromTermList,
                 type: 'all',  # insertion Nodes + Relation
-                reltype: 'both'
+                reldir: 'both'
               }
     requirements:
         type: 'all|node|rel'
-        reltype: 'both|none|relin|relout'
+        reldir: 'both|none|relin|relout'
+
+jdmapi_batch_service:
+    path:     /batch
+    defaults: { _controller:  JdmapiBundle.batch_controller:insertNodesAndRelsAction ,
+              type: 'all',   # insertion Nodes + Relation
+              urlencodedterm: 'diplodocus',
+              reldir: 'both',
+              relid: 0
+            }
+    requirements:
+        type: 'all|node|rel'
+        urlencodedterm: '[^/]+'
+        reldir: 'both|none|relin|relout'
+        relid: '\d+'
