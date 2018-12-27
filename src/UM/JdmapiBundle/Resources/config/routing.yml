@@ -16,16 +16,18 @@ jdmapi_getNodeByName:
 
 # Requête d'un mot par l'utilisateur
 jdmapi_getnode:
-    path:     /node/get/{urlencodedterm}/{filter}/{returnresults}
+    path:     /node/get/{urlencodedterm}/{reldir}/{returnresults}/{reltypes}/{nodetypes}
     defaults: { _controller: JdmapiBundle:Node:get,
                 urlencodedterm: 'cheval',
-                filter: 'both',
+                reldir: 'both',
                 returnresults: 1
               }
     requirements:
-        urlencodedterm: '[^/]+'
-        filter: 'both|none|relin|relout|(\d+,*)+'
-        return: '0|1'
+#        urlencodedterm: '[^/]+'
+#        reldir: 'both|none|relin|relout|(\d+,*)+'
+#        returnresults: '0|1'
+#        reltypes: '(d+,*)*'
+#        nodetypes: '(d+,*)*'
 
 # Route de test
 jdmapi_batch:

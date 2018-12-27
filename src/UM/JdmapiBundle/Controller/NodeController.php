@@ -63,7 +63,8 @@ class NodeController extends Controller
 	/*
 	 * Requête JDMAPI portant sur un terme
 	 * */
-	public function getAction(Request $request, String $urlencodedterm, $filter = "both", Int $returnresults = 1) {
+	public function getAction(Request $request, String $urlencodedterm, String $relDir = "both", Int $returnresults = 1,
+                              String $relTypes = "", String $nodeTypes = "") {
 
 	    /*
 	     *  Test de présence du mot dans la base locale
@@ -72,24 +73,15 @@ class NodeController extends Controller
         $excludeRelin = $this->defaultExcludeRelin;
         $excludeRelout = $this->defaultExcludeRelout;
 
-        if (!is_array($filter)) {
-            $filter = array("relDir" => (array) $filter);
-        }
-
         // Exclusion des relations entrantes ou sortantes
-        if (isset($filter["relDir"]) && is_array($filter["relDir"]) && !empty($filter["relDir"])) {
+        if ((!empty($relDir))) {
 
-            if (in_array($filter["relDir"], array("relout", "none"))) {
+            if (in_array($relDir, array("relout", "none"))) {
                 $excludeRelout = true;
             }
-            if (in_array($filter["relDir"], array("relin", "none"))) {
+            if (in_array($relDir, array("relin", "none"))) {
                 $excludeRelin = true;
             }
-        }
-
-        // Filtrage par types de relations
-        if (isset($filter["relTypes"]) && is_array($filter["relTypes"]) && !empty($filter["relTypes"])) {
-
         }
 
         $id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
@@ -99,7 +91,7 @@ class NodeController extends Controller
 
             echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
 
-            $results = $em->getRepository("JdmapiBundle:Node")->get($urlencodedterm, $excludeRelout, $excludeRelin, $filter);
+            $results = $em->getRepository("JdmapiBundle:Node")->get($urlencodedterm, $excludeRelout, $excludeRelin, $relTypes, $nodeTypes);
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
         else {

@@ -31,12 +31,6 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         } else {
             $sql = "SELECT N.id FROM node N WHERE N.name = ? LIMIT 1";
 
-            echo "<pre>";
-//            echo "\$sql = $sql";
-//            echo "\$urlencodedterm = $urlencodedterm";
-//            echo "</pre>";
-//            exit();
-
             $stmt = $conn->executeQuery($sql, array($urlencodedterm));
             $this->stmts["existsLocally"] = $stmt;
         }
@@ -48,19 +42,21 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
      * Renvoie les les données pour un noeud d'ID $nodeId
      * avec ou sans ses relation
      */
-    public function get(string $nodeId, bool $excludeRelout, bool $excludeRelin, array $filter, string $sortDirection = "DESC")
+    public function get(string $nodeId, bool $excludeRelout, bool $excludeRelin,
+                        String $relTypes = "", String $nodeTypes = "", string $sortDirection = "DESC")
     {
         // Pas de filtrage par défaut
         $filterNodeType = "false";
         $filterRelType = "false";
+        $patternIdSet = "/(\d+,*)*/";
 
         // Filtrage par type de noeuds actif
-        if (!empty($filter) && isset($filter["nodetype"]) && is_array($filter["nodetype"]) && !empty($filter["nodetype"])) {
+        if (!empty($nodeTypes) && preg_match($patternIdSet, $nodeTypes)) {
             $filterNodeType = "true";
         }
 
         // Filtrage par type des relations actif
-        if (!empty($filter) && isset($filter["relType"]) && is_array($filter["relType"]) && !empty($filter["relType"])) {
+        if (!empty($relTypes) && preg_match($patternIdSet, $relTypes)) {
             $filterRelType = "true";
         }
 
@@ -95,7 +91,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
                 if (!$excludeRelin) {
                     $from .= ", relation RI ";
-                    $where .= "RI.id_node2 = N.id ";
+                    $where .= "RI.id_node2 = N.id";
                 }
 
                 if (!$excludeRelout) {
@@ -103,7 +99,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                         $where .= " OR ";
                     }
                     $from .= ", relation RO ";
-                    $where .= "RO.id_node = N.id ";
+                    $where .= "RO.id_node = N.id";
                 }
 
                 $where .= ") ";
@@ -114,7 +110,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
                 // Filtrage par type des relations
                 if ("true" === $filterRelType) {
-                    $where .= "AND RI.id_type IN('" . implode("','", $filter["reltype"]) . "') ";
+                    $where .= "AND RI.id_type IN('" . trim($relTypes, ",") ."') ";
                 }
 
                 //**********************************************
@@ -125,17 +121,17 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 if ("true" === $filterNodeType) {
 //                    $from .= ", nodeType NT ";
 //                    $where .= "N.id = NT.id AND NT.id IN('" . implode("','", $filter["nodetype"]) . "') ";
-                    $where .= "AND N.id_type IN('" . implode("','", $filter["nodetype"]) . "') ";
+                    $where .= "AND N.id_type IN('" . trim($nodeTypes, ",") . "') ";
                 }
 
             }
 
             $sql = $select . $from . $where . $orderBy;
 
-            echo "<pre>";
-            echo "\$sql = $sql";
-            echo "</pre>";
-            exit();
+//            echo "<pre>";
+//            echo "\$sql = $sql";
+//            echo "</pre>";
+//            exit();
             
             $stmt = $conn->executeQuery($sql, array($nodeId));
             $this->stmts["get"][$filterRelin][$filterRelout][$filterNodeType][$sortDirection] = $stmt;
