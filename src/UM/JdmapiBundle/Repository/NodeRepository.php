@@ -43,20 +43,20 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
      * avec ou sans ses relation
      */
     public function get(string $nodeId, bool $excludeRelout, bool $excludeRelin,
-                        String $relTypes = "", String $nodeTypes = "", string $sortDirection = "DESC")
+                        String $relTypes = "all", String $nodeTypes = "all", string $sortDirection = "DESC")
     {
         // Pas de filtrage par défaut
         $filterNodeType = "false";
         $filterRelType = "false";
-        $patternIdSet = "/(\d+,*)*/";
+        $patternIdSet = "/(\d+,?)*/";
 
         // Filtrage par type de noeuds actif
-        if (!empty($nodeTypes) && preg_match($patternIdSet, $nodeTypes)) {
+        if (!empty($nodeTypes) && preg_match($patternIdSet, $nodeTypes) && "all" !== $nodeTypes) {
             $filterNodeType = "true";
         }
 
         // Filtrage par type des relations actif
-        if (!empty($relTypes) && preg_match($patternIdSet, $relTypes)) {
+        if (!empty($relTypes) && preg_match($patternIdSet, $relTypes && "all" !== $relTypes)) {
             $filterRelType = "true";
         }
 
@@ -87,26 +87,28 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             // Inclusion des relation entrantes ou/et sortantes (les 2 par défaut)
             if (!$excludeRelout || !$excludeRelin) {
 
-                $where .= "AND (";
+                // $where .= "AND (";
 
                 if (!$excludeRelin) {
-                    $from .= ", relation RI ";
-                    $where .= "RI.id_node2 = N.id";
+                    // $from .= ", relation RI ";
+                    $from .= " LEFT JOIN relation RI ON RI.id_node2 = N.id ";
+                    // $where .= "RI.id_node2 = N.id";
                 } else {
                     $excludeRelin = "true"; // String pour clé tableau stockage Statement
                 }
 
                 if (!$excludeRelout) {
-                    if (!$excludeRelin) {
+                    /*if (!$excludeRelin) {
                         $where .= " OR ";
                     }
-                    $from .= ", relation RO ";
-                    $where .= "RO.id_node = N.id";
+                    $from .= ", relation RO ";*/
+                    $from .= " LEFT JOIN relation RO ON RO.id_node = N.id ";
+                    // $where .= "RO.id_node = N.id";
                 } else {
                     $excludeRelout = "true"; // String pour clé tableau stockage Statement
                 }
 
-                $where .= ") ";
+                // $where .= ") ";
 
                 //**********************************************
                 // Filtrage par type de relations
@@ -132,14 +134,17 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
             $sql = $select . $from . $where . $orderBy;
 
-//            echo "<pre>";
-//            echo "\$sql = $sql";
-//            echo "</pre>";
+            echo "<pre>";
+            echo "\$sql = $sql";
+            echo "</pre>";
 //            exit();
             
             $stmt = $conn->executeQuery($sql, array($nodeId));
             $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection] = $stmt;
         }
+
+//        var_dump($stmt->fetchAll());
+//        exit();
 
         return $stmt->fetchAll();
     }

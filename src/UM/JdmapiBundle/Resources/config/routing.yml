@@ -15,19 +15,21 @@ jdmapi_getNodeByName:
     defaults: { _controller: JdmapiBundle:Default:getNodeByName }
 
 # Requête d'un mot par l'utilisateur
+# Le pattern de validation pour les reltypes et nodetypes '(\d+,?)*'
+# n'est pas interprété. Donc on laisse passer.
 jdmapi_getnode:
-    path:     /node/get/{urlencodedterm}/{reldir}/{returnresults}/{reltypes}/{nodetypes}
+    path:     /node/get/{urlencodedterm}/{reldir}/{returnresults}/{nodetypes}/{reltypes}
     defaults: { _controller: JdmapiBundle:Node:get,
                 urlencodedterm: 'cheval',
                 reldir: 'both',
                 returnresults: 1
               }
     requirements:
-#        urlencodedterm: '[^/]+'
-#        reldir: 'both|none|relin|relout|(\d+,*)+'
-#        returnresults: '0|1'
-#        reltypes: '(d+,*)*'
-#        nodetypes: '(d+,*)*'
+        urlencodedterm: '[^/]+?'
+        reldir: 'both|none|relin|relout'
+        returnresults: '0|1'
+        reltypes: '(\d+,?)*|all'
+        nodetypes: '(\d+,?)*|all'
 
 # Route de test
 jdmapi_batch:

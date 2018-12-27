@@ -64,7 +64,7 @@ class NodeController extends Controller
 	 * Requête JDMAPI portant sur un terme
 	 * */
 	public function getAction(Request $request, String $urlencodedterm, String $relDir = "both", Int $returnresults = 1,
-                              String $relTypes = "", String $nodeTypes = "") {
+                              String $relTypes = "all", String $nodeTypes = "all") {
 
 	    /*
 	     *  Test de présence du mot dans la base locale
@@ -91,14 +91,14 @@ class NodeController extends Controller
 
             echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
 
-            $results = $em->getRepository("JdmapiBundle:Node")->get($urlencodedterm, $excludeRelout, $excludeRelin, $relTypes, $nodeTypes);
+            $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $relTypes, $nodeTypes);
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
         else {
 
             echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
 
-            $results = $this->getRemote($request, $urlencodedterm, $excludeRelout, $excludeRelin);
+            $results = $this->getRemote($request, $urlencodedterm, false, false);
         }
 
         // Renvoi les données récupérées pour le noeud (mode fonctionnel applicatif)
@@ -115,35 +115,16 @@ class NodeController extends Controller
     * Requête JDMAPI portant sur un terme à récupérer sur rezo-dump
     * en utilisant le service Batch représenté par le BatchController
     * */
-    public function getRemote(Request $request, String $urlencodedterm, $excludeRelin, $excludeRelout) {
-
-        $relDir = "*";
-
-        // Exclusion des relations entrantes et sortantes
-        if (true == $excludeRelin && true == $excludeRelout) {
-            $relDir = "none";
-        }
-        // Exclusion des relations entrantes
-        elseif (true == $excludeRelin) {
-            $relDir = "relout";
-        }
-        // Exclusion des relations sortantes
-        elseif (true == $excludeRelout) {
-            $relDir = "relin";
-        }
-
-//        $batchService = $this->get("UM\JdmapiBundle\Controller\BatchController");
-//        $results = $batchService->insertNodesAndRelsAction($request, "", $urlencodedterm, $relType, 0, true);
+    public function getRemote(Request $request, String $urlencodedterm) {
 
         $results = $this->forward("JdmapiBundle:Batch:insertNodesAndRels", array(
             "request" => $request,
-            "type" => "",
+            "type" => "all",
             "urlencodedterm" => $urlencodedterm,
-            "relDir" => $relDir,
+            "relDir" => "both",
             "relid" => 0,
             "returnresults" => true
         ));
-        return  array("test" => "Its a test");
         return $results;
     }
 

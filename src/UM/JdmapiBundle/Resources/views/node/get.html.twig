@@ -1,2 +1,6 @@
 <h1>get.html.twig</h1>
-<pre>{{ results|raw }}</pre>
+<ul>
+    {% for result in results %}
+            <li id="{{ result.id }}"><a href="#{{ result.id }}" title="{{ result.formatted_name }}">{{ result.name }}</a></li>
+    {% endfor %}
+</ul>
