@@ -92,6 +92,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 if (!$excludeRelin) {
                     $from .= ", relation RI ";
                     $where .= "RI.id_node2 = N.id";
+                } else {
+                    $excludeRelin = "true"; // String pour clé tableau stockage Statement
                 }
 
                 if (!$excludeRelout) {
@@ -100,6 +102,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                     }
                     $from .= ", relation RO ";
                     $where .= "RO.id_node = N.id";
+                } else {
+                    $excludeRelout = "true"; // String pour clé tableau stockage Statement
                 }
 
                 $where .= ") ";
@@ -134,7 +138,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //            exit();
             
             $stmt = $conn->executeQuery($sql, array($nodeId));
-            $this->stmts["get"][$filterRelin][$filterRelout][$filterNodeType][$sortDirection] = $stmt;
+            $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection] = $stmt;
         }
 
         return $stmt->fetchAll();
