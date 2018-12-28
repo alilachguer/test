@@ -63,8 +63,8 @@ class NodeController extends Controller
 	/*
 	 * Requête JDMAPI portant sur un terme
 	 * */
-	public function getAction(Request $request, String $urlencodedterm, String $relDir = "both", Int $returnresults = 1,
-                              String $relTypes = "all", String $nodeTypes = "all") {
+	public function getAction(Request $request, String $urlencodedterm, String $reldir, Int $returnresults,
+                              String $reltypes, String $nodetypes = "all") {
 
 	    /*
 	     *  Test de présence du mot dans la base locale
@@ -74,27 +74,26 @@ class NodeController extends Controller
         $excludeRelout = $this->defaultExcludeRelout;
 
         // Exclusion des relations entrantes ou sortantes
-        if ((!empty($relDir))) {
+        if ((!empty($reldir))) {
 
-//            var_dump($relDir, $returnresults, $relTypes, $nodeTypes);
-//            exit();
-
-            if (in_array($relDir, array("relout", "none"))) {
+            if (in_array($reldir, array("relout", "none"))) {
                 $excludeRelout = true;
             }
-            if (in_array($relDir, array("relin", "none"))) {
+            if (in_array($reldir, array("relin", "none"))) {
                 $excludeRelin = true;
             }
         }
 
         $id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
 
+        $previousState = $this->get('jdmapi.batch')->setMaxResourcesState();
+
         // Le terme est présent dans la base locale : requête la base locale
         if (is_numeric($id) && $id > 0) {
 
             echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
 
-            $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $relTypes, $nodeTypes);
+            $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
         else {
@@ -103,6 +102,8 @@ class NodeController extends Controller
 
             $results = $this->getRemote($request, $urlencodedterm, false, false);
         }
+
+        $this->get('jdmapi.batch')->resetResourcesStateToPrevious($previousState);
 
         // Renvoi les données récupérées pour le noeud (mode fonctionnel applicatif)
         if (1 === $returnresults) {

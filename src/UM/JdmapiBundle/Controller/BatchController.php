@@ -133,15 +133,18 @@ class BatchController extends Controller
             $this->buffer .= 'Some insertions were skipped: ' . $e->getMessage();
         }
 
-        // Rétabli les valeurs préexistantes des directives
-        $this->resetResourcesStateToPrevious($previousState);
-
         // Mode applicatif fonctionnel : renvoi des résultats
         if (true === $returnresults) {
-            return new Response(array("nodes" => $nodes, "rels" => $rels));
+            $container = new Container();
+            $container->setContent(array("nodes" => serialize($nodes), "rels" => serialize($rels)));
+            // Rétabli les valeurs préexistantes des directives
+            $this->resetResourcesStateToPrevious($previousState);
+            return new Response($container);
         }
         // Mode batch : affichage d'un récapitulatif
         else {
+            // Rétabli les valeurs préexistantes des directives
+            $this->resetResourcesStateToPrevious($previousState);
             return $this->render('@Jdmapi/batch/insertnodesandrels.html.twig', array("buffer" => $this->buffer));
         }
     }
@@ -259,8 +262,7 @@ class BatchController extends Controller
                         SET name = excluded.name,
                         id_type = excluded.id_type,
                         weight = excluded.weight,
-                        formatted_name = excluded.formatted_name,
-                        is_main = 0;";
+                        formatted_name = excluded.formatted_name;";
 
                 // MySQL Upsert
                 $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name) 
@@ -269,8 +271,7 @@ class BatchController extends Controller
                         name = VALUES(name),
                         id_type = VALUES(id_type),
                         weight = VALUES(weight),
-                        formatted_name = VALUES(formatted_name),
-                        is_main = 0;";
+                        formatted_name = VALUES(formatted_name);";
 
                 $insertStmt = $em->getConnection()->prepare($sql);
 
@@ -597,7 +598,6 @@ class BatchController extends Controller
 
    public function __invoke($call)
    {
-       var_dump($call);
        return $this;
    }
 

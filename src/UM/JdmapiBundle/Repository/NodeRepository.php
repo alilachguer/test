@@ -115,18 +115,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
             $em = $this->getEntityManager();
             $conn = $em->getConnection();
-            $select = "SELECT N.*, 
-                          RI.id AS id_relin, 
-                          RI.id_node AS id_node_relin, 
-                          RI.id_type AS id_type_relin, 
-                          RI.weight AS weight_relin, 
-                          RO.id AS id_relin, 
-                          RO.id_node2 AS id_node_relout, 
-                          RO.id_type AS id_type_relout, 
-                          RO.weight AS weight_relout ";
+            $select = "SELECT N.*,";
             $from = "FROM node N ";
             $where = "WHERE N.id = ? ";
-            $orderBy = "ORDER BY (weight_relin + weight_relout) $sortDirection;";
+            $orderBy = "ORDER BY N.weight $sortDirection;";
 
             // Inclusion des relation entrantes ou/et sortantes (les 2 par défaut)
             if (!$excludeRelout || !$excludeRelin) {
@@ -134,20 +126,27 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 // $where .= "AND (";
 
                 if (!$excludeRelin) {
-                    // $from .= ", relation RI ";
+
+                    $select .= "RI.id AS id_relin, 
+                          RI.id_node AS id_node_relin, 
+                          RI.id_type AS id_type_relin, 
+                          RI.weight AS weight_relin,";
+
                     $from .= " LEFT JOIN relation RI ON N.id = RI.id_node2 ";
-                    // $where .= "RI.id_node2 = N.id";
+
                 } else {
                     $excludeRelin = "true"; // String pour clé tableau stockage Statement
                 }
 
                 if (!$excludeRelout) {
-                    /*if (!$excludeRelin) {
-                        $where .= " OR ";
-                    }
-                    $from .= ", relation RO ";*/
+
+                    $select .= "RO.id AS id_relin, 
+                          RO.id_node2 AS id_node_relout, 
+                          RO.id_type AS id_type_relout, 
+                          RO.weight AS weight_relout,";
+
                     $from .= " LEFT JOIN relation RO ON N.id = RO.id_node ";
-                    // $where .= "RO.id_node = N.id";
+
                 } else {
                     $excludeRelout = "true"; // String pour clé tableau stockage Statement
                 }
@@ -173,8 +172,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //                    $where .= "N.id = NT.id AND NT.id IN('" . implode("','", $filter["nodetype"]) . "') ";
                     $where .= "AND N.id_type IN('" . trim($nodeTypes, ",") . "') ";
                 }
+             }
 
-            }
+            // Suppression virgule finale
+            $select = substr($select, 0, strlen($select) - 1) . " ";
 
             $sql = $select . $from . $where . $orderBy;
 
