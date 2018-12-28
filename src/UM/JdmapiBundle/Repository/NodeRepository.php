@@ -134,18 +134,18 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
             $sql = $select . $from . $where . $orderBy;
 
-            echo "<pre>";
-            echo "\$sql = $sql";
-            echo "</pre>";
+//            echo "<pre>";
+//            echo "\$sql = $sql";
+//            echo "</pre>";
 //            exit();
             
             $stmt = $conn->executeQuery($sql, array($nodeId));
             $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection] = $stmt;
         }
 
-        echo "<pre>";
-        var_dump($stmt->fetchAll());
-        echo "</pre>";
+//        echo "<pre>";
+//        var_dump($stmt->fetchAll());
+//        echo "</pre>";
 //        exit();
 
         return $stmt->fetchAll();

@@ -76,6 +76,9 @@ class NodeController extends Controller
         // Exclusion des relations entrantes ou sortantes
         if ((!empty($relDir))) {
 
+//            var_dump($relDir, $returnresults, $relTypes, $nodeTypes);
+//            exit();
+
             if (in_array($relDir, array("relout", "none"))) {
                 $excludeRelout = true;
             }
@@ -89,7 +92,7 @@ class NodeController extends Controller
         // Le terme est présent dans la base locale : requête la base locale
         if (is_numeric($id) && $id > 0) {
 
-            echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+            // echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $relTypes, $nodeTypes);
         }
@@ -103,7 +106,7 @@ class NodeController extends Controller
 
         // Renvoi les données récupérées pour le noeud (mode fonctionnel applicatif)
         if (1 === $returnresults) {
-            return $results;
+            return new Response($results);
         }
         // Affiche un récupitalatif (mode debug)
         else {
@@ -117,7 +120,7 @@ class NodeController extends Controller
     * */
     public function getRemote(Request $request, String $urlencodedterm) {
 
-        $results = $this->forward("JdmapiBundle:Batch:insertNodesAndRels", array(
+        $response = $this->forward("JdmapiBundle:Batch:insertNodesAndRels", array(
             "request" => $request,
             "type" => "all",
             "urlencodedterm" => $urlencodedterm,
@@ -125,7 +128,7 @@ class NodeController extends Controller
             "relid" => 0,
             "returnresults" => true
         ));
-        return $results;
+        return $response;
     }
 
 

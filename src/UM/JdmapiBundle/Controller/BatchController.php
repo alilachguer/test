@@ -134,7 +134,7 @@ class BatchController extends Controller
 
         // Mode applicatif fonctionnel : renvoi des résultats
         if (true === $returnresults) {
-            return array("nodes" => $nodes, "rels" => $rels);
+            return new Response(array("nodes" => $nodes, "rels" => $rels));
         }
         // Mode batch : affichage d'un récapitulatif
         else {
