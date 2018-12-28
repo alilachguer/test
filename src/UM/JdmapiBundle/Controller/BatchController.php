@@ -2,6 +2,7 @@
 namespace UM\JdmapiBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use UM\JdmapiBundle\Entity\Node;
 
 /*
@@ -179,6 +180,7 @@ class BatchController extends Controller
         $default_socket_timeout = ini_get('default_socket_timeout');
         ini_set('default_socket_timeout', 60*3);
         $src = file_get_contents($url);
+        //$src = file_get_contents("rezo-dump_source_cheval.html");
         ini_set('default_socket_timeout', $default_socket_timeout);
         // Conversion de l'encodage de la page source en UTF-8
         $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
@@ -191,7 +193,9 @@ class BatchController extends Controller
         $matched = preg_match($pattern_main_node, $src, $matches);
 
         if (1 !== $matched) {
-            throw new \Exception("Le noeud principal n'a pas été trouvé dans le code source JDM.");
+            $message = "Le noeud principal n'a pas été trouvé dans le code source JDM.";
+            $message .= "Code source : <hr />". htmlentities(substr($src, 0, 1000));
+            throw new \Exception($message);
         }
 
         // on conserve son ID pour le sauter dans la boucle d'insertion générale.
@@ -306,7 +310,6 @@ class BatchController extends Controller
                         $insertStmt->bindValue(3, /*type*/ $typeId);
                         $insertStmt->bindValue(4, /*weight*/ $weight);
                         $insertStmt->bindValue(5, /*formatted_name*/ $formattedName);
-                        $insertStmt->bindValue(6, /*is_main*/ 0);
 
                         $insertStmt->execute();
                     }

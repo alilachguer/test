@@ -131,15 +131,4 @@ class NodeController extends Controller
         return $response;
     }
 
-
-    /*
-    * Appelle son repository pour réaliser l'insertion ou mise à jour d'un terme isolé
-     * avec le statut "main" (terme principal). A réaliser après l'insertion des noeuds et relations pour ce terme.
-    * */
-//    public function insertMain($urlencodedterm) {
-//
-//        $em = $this->getDoctrine()->getManager();
-//        return $em->getRepository("JdmapiBundle:Node")->insertMain($urlencodedterm);
-//    }
-
 }
