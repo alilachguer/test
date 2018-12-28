@@ -29,13 +29,57 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
         // Sinon on crée la requête on l'exécute et on l'enregistre
         } else {
-            $sql = "SELECT N.id FROM node N WHERE N.name = ? LIMIT 1";
+            $sql = "SELECT N.id FROM node N WHERE N.name = ? AND is_main = 1 LIMIT 1";
 
             $stmt = $conn->executeQuery($sql, array($urlencodedterm));
             $this->stmts["existsLocally"] = $stmt;
         }
         $idRrow = $stmt->fetch();
         return $idRrow["id"] ?? 0;
+    }
+
+    /*
+    * Insertion ou mise à jour d'un terme isolé avec le statut "main" (terme principal)
+    * à réaliser après l'insertion des noeuds et relations pour ce terme.
+    */
+    public function insertMain(array $data) {
+
+        echo "<p>TEST DANS NodeRepository</p>";
+
+        // Récupération de l'ID d'un terme existant
+/*        if (is_null($id)) {
+            $row = $this->findBy(array("name" => $urlencodedterm));
+
+            var_dump($id);
+            exit();
+
+            if (empty($row) || !isset($row[0]) || !is_object($row[0])) {
+                throw new \Exception("ID du terme principal introuvable (donnée requise).");
+            } else {
+                $node = $row[0];
+                $id = $node->getId();
+            }
+        }*/
+
+        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main) 
+                VALUES (?, ?, ?, ?, ?, 1)
+                ON DUPLICATE KEY UPDATE 
+                name = VALUES(name),
+                id_type = VALUES(id_type),
+                weight = VALUES(weight),
+                formatted_name = VALUES(formatted_name),
+                is_main = 1;";
+
+        $em = $this->getEntityManager();
+        $insertStmt = $em->getConnection()->prepare($sql);
+
+        $insertStmt->bindValue(1, /*id*/ $data["id"]);
+        $insertStmt->bindValue(2, /*name*/ $data["name"]);
+        $insertStmt->bindValue(3, /*type*/ $data["type"]);
+        $insertStmt->bindValue(4, /*weight*/ $data["weight"]);
+        $insertStmt->bindValue(5, /*formatted_name*/ $data["formatted_name"]);
+
+        $insertStmt->execute();
     }
 
     /*

@@ -2,6 +2,7 @@
 namespace UM\JdmapiBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use UM\JdmapiBundle\Entity\Node;
 
 /*
  * @todo :
@@ -118,10 +119,12 @@ class BatchController extends Controller
         try {
             if ('rel' !==  $type) {
                 $this->buffer .= "<p>Inserting Nodes</p>";
+                echo "<p>Inserting Nodes</p>";
                 $nodes = $this->insertNodesAction($request, $urlencodedterm, $relDir, $relid, $returnresults);
             }
             if ('node' !==  $type) {
                 $this->buffer .= "<p>Inserting Relation(s)</p>";
+                echo "<p>Inserting Relation(s)</p>";
                 $rels = $this->insertRelsAction($request, $urlencodedterm, $relDir, $relid, $returnresults);
             }
 
@@ -151,6 +154,7 @@ class BatchController extends Controller
                                       Bool $returnresults = false)
     {
         $this->buffer .= "<p>Begin source parsing for nodes</p>";
+        echo "<p>Begin source parsing for nodes</p>";
 
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
@@ -178,6 +182,27 @@ class BatchController extends Controller
         ini_set('default_socket_timeout', $default_socket_timeout);
         // Conversion de l'encodage de la page source en UTF-8
         $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
+
+        // Le premier noeud matché est le noeud principal
+        // les noeuds/termes (Entries) : e;eid;'name';type;w;'formated name'
+        // e;73893;'singe';1;864
+        $matches = array();
+        $pattern_main_node = "/e;(\d+);'(.+?)';(\d+);(\d+)(;'([^\n]+)')?\n?/";
+        $matched = preg_match($pattern_main_node, $src, $matches);
+
+        if (1 !== $matched) {
+            throw new \Exception("Le noeud principal n'a pas été trouvé dans le code source JDM.");
+        }
+
+        // on conserve son ID pour le sauter dans la boucle d'insertion générale.
+        $mainId = $matches[1];
+        $mainData = array();
+        $mainData["id"] = $mainId;
+        $mainData["name"] = $matches[2];
+        $mainData["type"] = $matches[3];
+        $mainData["weight"] = $matches[4];
+        $mainData["formatted_name"] = $matches[5] ?? "";
+        // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
 
         // Pattern collection by node type
         // generic node pattern : (^e;\d+;'.+';\d+;\d+(;'.+')?\n)+
@@ -214,9 +239,6 @@ class BatchController extends Controller
         }
 
         try {
-//            var_dump($this->getDoctrine());
-//            exit();
-
             // Connexion à la base de donnée
             if (($em = $this->get('doctrine')->getManager()) != null) {
 
@@ -233,7 +255,8 @@ class BatchController extends Controller
                         SET name = excluded.name,
                         id_type = excluded.id_type,
                         weight = excluded.weight,
-                        formatted_name = excluded.formatted_name;";
+                        formatted_name = excluded.formatted_name,
+                        is_main = 0;";
 
                 // MySQL Upsert
                 $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name) 
@@ -242,7 +265,8 @@ class BatchController extends Controller
                         name = VALUES(name),
                         id_type = VALUES(id_type),
                         weight = VALUES(weight),
-                        formatted_name = VALUES(formatted_name);";
+                        formatted_name = VALUES(formatted_name),
+                        is_main = 0;";
 
                 $insertStmt = $em->getConnection()->prepare($sql);
 
@@ -261,6 +285,12 @@ class BatchController extends Controller
                         $weight = $nodeData[3] ?? null;
                         $formattedName = $nodeData[5] ?? null;
 
+                        // Le noeud principal est déjà enregistré en tant que tel
+                        // on le passe.
+                        if ($nodeData[1] === $mainId) {
+                            continue;
+                        }
+
                         $this->buffer .= "<p>Node ID = {$nodeData[1]}<br />";
                         //$decodedName = $this->convertUtf8codes(urldecode($name));
                         $decodedName = trim(urldecode($name), " \t\n\r\0\x0B'");
@@ -276,9 +306,13 @@ class BatchController extends Controller
                         $insertStmt->bindValue(3, /*type*/ $typeId);
                         $insertStmt->bindValue(4, /*weight*/ $weight);
                         $insertStmt->bindValue(5, /*formatted_name*/ $formattedName);
+                        $insertStmt->bindValue(6, /*is_main*/ 0);
 
                         $insertStmt->execute();
                     }
+
+                    // Enregistrement du noeud principal en tant que tel
+                    $em->getRepository("JdmapiBundle:Node")->insertMain($mainData);
                 }
 
             }

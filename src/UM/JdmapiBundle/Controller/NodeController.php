@@ -92,7 +92,7 @@ class NodeController extends Controller
         // Le terme est présent dans la base locale : requête la base locale
         if (is_numeric($id) && $id > 0) {
 
-            // echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+            echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $relTypes, $nodeTypes);
         }
@@ -132,7 +132,14 @@ class NodeController extends Controller
     }
 
 
-
-
+    /*
+    * Appelle son repository pour réaliser l'insertion ou mise à jour d'un terme isolé
+     * avec le statut "main" (terme principal). A réaliser après l'insertion des noeuds et relations pour ce terme.
+    * */
+//    public function insertMain($urlencodedterm) {
+//
+//        $em = $this->getDoctrine()->getManager();
+//        return $em->getRepository("JdmapiBundle:Node")->insertMain($urlencodedterm);
+//    }
 
 }

@@ -31,7 +31,7 @@ class Node
     /**
      * @var int
      *
-     * @ORM\Column(name="type_id", type="integer")
+     * @ORM\Column(name="id_type", type="integer")
      * @ORM\ManyToOne(targetEntity="Node_type", inversedBy="id")
      */
     private $type;
@@ -50,6 +50,39 @@ class Node
      */
     private $formattedName;
 
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="is_main", type="integer")
+     */
+    private $isMain;
+
+    /**
+     * @return int
+     */
+    public function getIsMain(): int
+    {
+        return $this->isMain;
+    }
+
+    /**
+     * @param int $isMain
+     */
+    public function setIsMain(Int $isMain)
+    {
+        $this->isMain = $isMain;
+    }
+
+    /**
+     * Set id
+     *
+     * @return node
+     */
+    public function setId(int $id)
+    {
+        $this->id = $id;
+        return $this;
+    }
 
     /**
      * Get id
@@ -71,7 +104,6 @@ class Node
     public function setName($name)
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -95,7 +127,6 @@ class Node
     public function setType($type)
     {
         $this->type = $type;
-
         return $this;
     }
 
@@ -119,7 +150,6 @@ class Node
     public function setWeight($weight)
     {
         $this->weight = $weight;
-
         return $this;
     }
 
@@ -143,7 +173,6 @@ class Node
     public function setFormattedName($formattedName)
     {
         $this->formattedName = $formattedName;
-
         return $this;
     }
 
