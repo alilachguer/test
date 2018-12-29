@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block body %}
     <h1>get.html.twig</h1>
+    <pre>{{ dump(results) }}</pre>
     <ul>
         {% for result in results %}
                 <li id="{{ result.id }}"><a href="#{{ result.id }}" title="{{ result.formatted_name }}">{{ result.name }}</a></li>

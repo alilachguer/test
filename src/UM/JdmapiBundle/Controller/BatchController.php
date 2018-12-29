@@ -3,6 +3,7 @@ namespace UM\JdmapiBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use UM\JdmapiBundle\Entity\Container;
 use UM\JdmapiBundle\Entity\Node;
 
 /*
