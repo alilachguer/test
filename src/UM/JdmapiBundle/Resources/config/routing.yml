@@ -18,7 +18,7 @@ jdmapi_getNodeByName:
 # Le pattern de validation pour les reltypes et nodetypes '(\d+,?)*'
 # n'est pas interprété. Donc on laisse passer.
 jdmapi_getnode:
-    path:     /node/get/{urlencodedterm}/{reldir}/{returnresults}/{nodetypes}/{reltypes}
+    path:     /node/get/{urlencodedterm}/{reldir}/{returnresults}/{reltypes}/{nodetypes}
     defaults: { _controller: JdmapiBundle:Node:get,
                 urlencodedterm: 'cheval',
                 reldir: 'both',

@@ -64,7 +64,7 @@ class NodeController extends Controller
 	 * Requête JDMAPI portant sur un terme
 	 * */
 	public function getAction(Request $request, String $urlencodedterm, String $reldir, Int $returnresults,
-                              String $reltypes, String $nodetypes = "all") {
+                              String $reltypes = "all", String $nodetypes = "all") {
 
 	    /*
 	     *  Test de présence du mot dans la base locale
@@ -76,10 +76,10 @@ class NodeController extends Controller
         // Exclusion des relations entrantes ou sortantes
         if ((!empty($reldir))) {
 
-            if (in_array($reldir, array("relout", "none"))) {
+            if (in_array($reldir, array("relin", "none"))) {
                 $excludeRelout = true;
             }
-            if (in_array($reldir, array("relin", "none"))) {
+            if (in_array($reldir, array("relout", "none"))) {
                 $excludeRelin = true;
             }
         }

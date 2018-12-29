@@ -87,7 +87,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
      * avec ou sans ses relation
      */
     public function get(string $nodeId, bool $excludeRelout, bool $excludeRelin,
-                        String $relTypes = "all", String $nodeTypes = "all", string $sortDirection = "DESC")
+                        String $relTypes = "all", String $nodeTypes = "all",
+                        String $sortDirection1 = "DESC", String $sortDirection2 = "DESC")
     {
         // Pas de filtrage par défaut
         $filterNodeType = "false";
@@ -95,87 +96,90 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $patternIdSet = "/(\d+,?)*/";
 
         // Filtrage par type de noeuds actif
-        if (!empty($nodeTypes) && preg_match($patternIdSet, $nodeTypes) && "all" !== $nodeTypes) {
+        if ("" !== $nodeTypes && preg_match($patternIdSet, $nodeTypes) && "all" !== $nodeTypes) {
             $filterNodeType = "true";
         }
 
         // Filtrage par type des relations actif
-        if (!empty($relTypes) && preg_match($patternIdSet, $relTypes) && "all" !== $relTypes) {
+        if ("" !== $relTypes && preg_match($patternIdSet, $relTypes) && "all" !== $relTypes) {
             $filterRelType = "true";
         }
 
-        // Si la requête préparée correspondante existe on la récupère et on l'exécute
-        if (isset($this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection])
-            && is_object($this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection])
-            && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection])) {
-            $stmt = $this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection];
+        // Si la requête préparée correspondante existe déjà on la récupère et on l'exécute
+        if (isset($this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection1][$sortDirection2])
+            && is_object($this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection1][$sortDirection2])
+            && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection1][$sortDirection2])) {
+            $stmt = $this->stmts["get"][$filterRelType][$filterNodeType][$sortDirection1][$sortDirection2];
             $stmt->execute(array($nodeId));
         // Sinon on crée la requête on l'exécute et on l'enregistre
         } else {
 
             $em = $this->getEntityManager();
             $conn = $em->getConnection();
-            $select = "SELECT N.*,";
-            $from = "FROM node N ";
-            $where = "WHERE N.id = ? ";
-            $orderBy = "ORDER BY N.weight $sortDirection;";
+            $select = "
+                SELECT                 
+                N.id AS main_node_id,
+                N.name AS main_node_name,
+                N.id_type AS main_node_id_type,
+                N.weight AS main_node_weight,
+                N.formatted_name AS main_node_formatted_name,
+                --
+                D.id AS rel_node_id,
+                D.name AS rel_node_name, 
+                D.id_type AS rel_node_id_type,
+                D.weight AS rel_node_weight,
+                D.formatted_name AS rel_node_formatted_name,
+                D.is_main AS rel_node_is_main,
+                --
+                R.id AS id_rel,
+                R.id_node AS id_node_rel,
+                R.id_node2 AS id_node2_rel,
+                R.id_type AS id_type_rel,
+                R.weight AS weight_rel,
+                (R.id_node2 = N.id) AS is_relin,
+                (R.id_node = N.id) AS is_relout 
+                ";
 
-            // Inclusion des relation entrantes ou/et sortantes (les 2 par défaut)
-            if (!$excludeRelout || !$excludeRelin) {
+            $from = "FROM node N, relation R, node D 
+                ";
+            $where = "WHERE N.id = ?                 
+                 AND (
+                    -- Relation entrante
+                    (N.id = R.id_node2 AND R.id_node = D.id)
+                    OR
+                    -- Relation sortante
+                    (N.id = R.id_node AND R.id_node2 = D.id)
+                  )
+                 ";
+            $orderBy = "ORDER BY is_relin DESC, weight_rel DESC";
 
-                // $where .= "AND (";
+            if ($excludeRelin) {
+                // AND is_relin = 0
+                $where .= " AND (R.id_node2 = N.id) = 0 
+                ";
+                $excludeRelin = "true"; // String pour clé tableau stockage Statement
+            }
 
-                if (!$excludeRelin) {
+            if ($excludeRelout) {
+                // AND is_relout = 0
+                $where .= " AND (R.id_node = N.id) = 0 
+                   ";
+                $excludeRelout = "true"; // String pour clé tableau stockage Statement
+            }
 
-                    $select .= "RI.id AS id_relin, 
-                          RI.id_node AS id_node_relin, 
-                          RI.id_type AS id_type_relin, 
-                          RI.weight AS weight_relin,";
+            //**********************************************
+            // Filtrage par type de relations
+            //**********************************************
+            if ("true" === $filterRelType) {
+                $where .= "AND R.id_type IN(" . trim($relTypes, ",") .") ";
+            }
 
-                    $from .= " LEFT JOIN relation RI ON N.id = RI.id_node2 ";
-
-                } else {
-                    $excludeRelin = "true"; // String pour clé tableau stockage Statement
-                }
-
-                if (!$excludeRelout) {
-
-                    $select .= "RO.id AS id_relin, 
-                          RO.id_node2 AS id_node_relout, 
-                          RO.id_type AS id_type_relout, 
-                          RO.weight AS weight_relout,";
-
-                    $from .= " LEFT JOIN relation RO ON N.id = RO.id_node ";
-
-                } else {
-                    $excludeRelout = "true"; // String pour clé tableau stockage Statement
-                }
-
-                // $where .= ") ";
-
-                //**********************************************
-                // Filtrage par type de relations
-                //**********************************************
-
-                // Filtrage par type des relations
-                if ("true" === $filterRelType) {
-                    $where .= "AND RI.id_type IN('" . trim($relTypes, ",") ."') ";
-                }
-
-                //**********************************************
-                // Filtrage par type de noeuds
-                //**********************************************
-
-                // Filtrage par type des relations sortantes
-                if ("true" === $filterNodeType) {
-//                    $from .= ", nodeType NT ";
-//                    $where .= "N.id = NT.id AND NT.id IN('" . implode("','", $filter["nodetype"]) . "') ";
-                    $where .= "AND N.id_type IN('" . trim($nodeTypes, ",") . "') ";
-                }
-             }
-
-            // Suppression virgule finale
-            $select = substr($select, 0, strlen($select) - 1) . " ";
+            //**********************************************
+            // Filtrage par type de noeuds
+            //**********************************************
+            if ("true" === $filterNodeType) {
+                $where .= "AND D.id_type IN(" . trim($nodeTypes, ",") . ") ";
+            }
 
             $sql = $select . $from . $where . $orderBy;
 
@@ -185,7 +189,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //            exit();
             
             $stmt = $conn->executeQuery($sql, array($nodeId));
-            $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection] = $stmt;
+            $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection1][$sortDirection2] = $stmt;
         }
 
 //        echo "<pre>";
