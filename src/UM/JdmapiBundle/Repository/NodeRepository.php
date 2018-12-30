@@ -44,8 +44,6 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
     */
     public function insertMain(array $data) {
 
-        echo "<p>TEST DANS NodeRepository</p>";
-
         // Récupération de l'ID d'un terme existant
 /*        if (is_null($id)) {
             $row = $this->findBy(array("name" => $urlencodedterm));
@@ -207,21 +205,24 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
     public function insert(Int $typeId, array $nodeData) {
 
         try {
-            $sqlInit = "SET NAMES 'utf8';";
             $em = $this->getEntityManager();
-            $em->getConnection()->executeQuery($sqlInit);
 
-            // SQLite Upsert
-            /*$sql = "INSERT OR REPLACE INTO node (id, name, id_type, weight, formatted_name)
-						VALUES (?, ?, ?, ?, ?)
-                        ON CONFLICT(id) DO UPDATE
-                        SET name = excluded.name,
-                        id_type = excluded.id_type,
-                        weight = excluded.weight,
-                        formatted_name = excluded.formatted_name;";*/
+            if (isset($this->stmts["insert"]) && is_object($this->stmts["insert"])
+                && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts["insert"])) {
+                $insertStmt = $this->stmts["insert"];
 
-            // MySQL Upsert
-            $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name) 
+            } else {
+                // SQLite Upsert
+                /*$sql = "INSERT OR REPLACE INTO node (id, name, id_type, weight, formatted_name)
+                            VALUES (?, ?, ?, ?, ?)
+                            ON CONFLICT(id) DO UPDATE
+                            SET name = excluded.name,
+                            id_type = excluded.id_type,
+                            weight = excluded.weight,
+                            formatted_name = excluded.formatted_name;";*/
+
+                // MySQL Upsert
+                $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name) 
 						VALUES (?, ?, ?, ?, ?)
                         ON DUPLICATE KEY UPDATE 
                         name = VALUES(name),
@@ -229,7 +230,9 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                         weight = VALUES(weight),
                         formatted_name = VALUES(formatted_name);";
 
-            $insertStmt = $em->getConnection()->prepare($sql);
+                $insertStmt = $em->getConnection()->prepare($sql);
+                $this->stmts["insert"] = $insertStmt;
+            }
 
             $name = $nodeData[2] ?? null;
             $weight = $nodeData[3] ?? null;
@@ -386,4 +389,20 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         }
         return array("nodes_from_types" => $nodes_from_types, "mainId" => $mainId);
     }
+
+    /*
+     * Set DB connection ends and channel to UTF8
+     * */
+    public function setConnectionChannelUtf8() {
+
+        try {
+            $sqlInit = "SET NAMES 'utf8';";
+            $em = $this->getEntityManager();
+            $em->getConnection()->executeQuery($sqlInit);
+
+        } catch (\PDOException $e) {
+            echo "SET NAMES 'utd8' has thrown an Exception : " . $e->getMessage();
+        }
+    }
+
 }

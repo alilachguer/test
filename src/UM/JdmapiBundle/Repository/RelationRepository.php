@@ -99,4 +99,149 @@ class RelationRepository extends \Doctrine\ORM\EntityRepository
         }
         return $stmt->fetchAll();
     }
+
+    /*
+     * Requête rezo-dump avec un terme et un paramètrage optionnel des relations
+     * liées à celui-ci. Renvoie les résultats dans un tableau avec l'ID du terme requêté.
+     */
+    public function getRelsFromType(String $urlencodedterm, String $relDir = "*") {
+
+        $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
+
+        // Ciblage explicite d'une relation par son ID
+        if (isset($relid) && $relid > 0) {
+            $url .= "&rel={$relid}";
+        }
+        else {
+            // Exclusion des relations entrantes
+            if (in_array($relDir, array("relout", "none"))) {
+                $url .= "&relin=norelin";
+            }
+            // Exclusion des relations sortantes
+            if (in_array($relDir, array("relin", "none"))) {
+                $url .= "&relout=norelout";
+            }
+        }
+
+        /*echo "<pre>";
+        print_r($url);
+        echo "</pre>";
+        exit();*/
+
+        // réglage de timeout pour file_get_contents avec
+        // backup et restauration de la valeur existante
+        // après l'opération
+        $default_socket_timeout = ini_get('default_socket_timeout');
+        ini_set('default_socket_timeout', 60*3);
+        $src = file_get_contents($url);
+        ini_set('default_socket_timeout', $default_socket_timeout);
+        // Conversion de l'encodage de la page source en UTF-8
+        $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
+
+        try {
+
+            // Get node EID
+            $node_id_pattern = "/\(eid=(\d+)\)/";
+            $matches = array();
+
+            $matched = preg_match($node_id_pattern, $src,$matches);
+
+            if ($matched) {
+                $query_node_id = $matches[1];
+                $matches = array();
+            } else {
+                throw new \Exception("Le Node ID du mot n'a pas été trouvé dans le code source.");
+            }
+        }
+        catch (\Exception $e) {
+            $this->buffer .= $e->getMessage();
+            return 0;
+        }
+
+        $rels_types =  array(0, 1, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 32, 35, 36, 41, 42, 45, 46, 51, 52, 53, 58, 59, 60, 64, 66, 67, 69, 72, 73, 74, 102, 106, 107, 109, 115, 126, 128, 151, 155, 333, 444, 555, 666, 777, 999, 1002, 2000);
+        $incoming_rels_from_types = array();
+        $outgoing_rels_from_types = array();
+
+        // Pour chaque type de relation
+        foreach ($rels_types as $type_id) {
+
+            //$this->buffer .="\$type_id = $type_id<br />";
+
+            $incoming_rels_from_type_pattern = "/r;(\d+);(\d+);{$query_node_id};{$type_id};(-?\d+)\n?/";
+            $outgoing_rels_from_type_pattern = "/r;(\d+);{$query_node_id};(\d+);{$type_id};(-?\d+)\n?/";
+
+            // Récupération des relations entrantes de ce type pour ce noeud
+
+            $matched = preg_match_all($incoming_rels_from_type_pattern, $src, $matches, PREG_SET_ORDER);
+
+            if ($matched) {
+                $incoming_rels_from_types[$type_id] = $matches;
+            }
+
+            // Récupération des relations sortantes de ce type pour ce noeud
+            $matched = preg_match_all($outgoing_rels_from_type_pattern, $src, $matches, PREG_SET_ORDER);
+
+            if ($matched) {
+                $outgoing_rels_from_types[$type_id] = $matches;
+            }
+
+        }
+
+        return array(
+            "incoming_rels_from_types" => $incoming_rels_from_types,
+            "outgoing_rels_from_types" => $outgoing_rels_from_types,
+            "mainId" => $query_node_id,
+            );
+    }
+
+    /*
+     * Insère ou mets à jour la base de donnée pour le noeud de type $typeId avec les données
+     * contenues dans $nodeData.
+    */
+    public function insert(array $relData) {
+
+        try {
+            $em = $this->getEntityManager();
+
+
+            if (isset($this->stmts["insert"]) && is_object($this->stmts["insert"])
+                && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts["insert"])) {
+                $insertStmt = $this->stmts["insert"];
+
+            } else {
+                // SQLite Upsert
+                /*$sql = "INSERT OR REPLACE INTO relation (id, id_node, id_node2, id_type, weight)
+						VALUES (?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE
+                        SET id_node = excluded.id_node,
+                        id_node2 = excluded.id_node2,
+                        id_type = excluded.id_type,
+                        weight = excluded.weight;";*/
+
+                // MySQL Upsert
+                $sql = "INSERT INTO relation (id, id_node, id_node2, id_type, weight) 
+						VALUES (?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE 
+                        id_node = VALUES(id_node),
+                        id_node2 = VALUES(id_node2),
+                        id_type = VALUES(id_type),
+                        weight = VALUES(weight);";
+
+                $insertStmt = $em->getConnection()->prepare($sql);
+                $this->stmts["insert"] = $insertStmt;
+            }
+
+            $insertStmt->bindValue(1, /*id*/ $relData["id"]);
+            $insertStmt->bindValue(2, /*id_node1*/ $relData["id_node1"]);
+            $insertStmt->bindValue(3, /*id_node2*/ $relData["id_node2"]);
+            $insertStmt->bindValue(4, /*type_id*/ $relData["type_id"]);
+            $insertStmt->bindValue(5, /*weight*/ $relData["weight"]);
+            $insertStmt->execute();
+
+        } catch (\PDOException $e) {
+            echo 'Some insertions were skipped: ' . $e->getMessage();
+        }
+
+    }
+
 }
