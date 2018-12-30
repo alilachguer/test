@@ -100,7 +100,8 @@ class NodeController extends Controller
 
             echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
 
-            $results = $this->getRemote($request, $urlencodedterm, false, false);
+            //$results = $this->getRemote($request, $urlencodedterm);
+            $results = $this->getRemoteNew($urlencodedterm);
         }
 
         $this->get('jdmapi.batch')->resetResourcesStateToPrevious($previousState);
@@ -130,6 +131,20 @@ class NodeController extends Controller
             "returnresults" => true
         ));
         return $response;
+    }
+
+    /*
+     * Requête JDMAPI portant sur un terme à récupérer sur rezo-dump
+     * en utilisant le service Batch représenté par le BatchController
+    * */
+    public function getRemoteNew(String $urlencodedterm) {
+
+        $em = $this->getDoctrine()->getManager();
+        $results = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, "*");
+        $nodes = $results["nodes_from_types"];
+        $mainId = $results["mainId"];
+        $relations = $em->getRepository("JdmapiBundle:Relation")->getRels($mainId);
+        return array("nodes" => $nodes, "relatiions" => $relations);
     }
 
 }

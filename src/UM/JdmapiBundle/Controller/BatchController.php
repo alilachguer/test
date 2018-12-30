@@ -134,20 +134,10 @@ class BatchController extends Controller
             $this->buffer .= 'Some insertions were skipped: ' . $e->getMessage();
         }
 
-        // Mode applicatif fonctionnel : renvoi des résultats
-        if (true === $returnresults) {
-            $container = new Container();
-            $container->setContent(array("nodes" => serialize($nodes), "rels" => serialize($rels)));
-            // Rétabli les valeurs préexistantes des directives
-            $this->resetResourcesStateToPrevious($previousState);
-            return new Response($container);
-        }
-        // Mode batch : affichage d'un récapitulatif
-        else {
-            // Rétabli les valeurs préexistantes des directives
-            $this->resetResourcesStateToPrevious($previousState);
-            return $this->render('@Jdmapi/batch/insertnodesandrels.html.twig', array("buffer" => $this->buffer));
-        }
+        // Rétabli les valeurs préexistantes des directives
+        $this->resetResourcesStateToPrevious($previousState);
+        // Affichage d'un récapitulatif
+        return $this->render('@Jdmapi/batch/insertnodesandrels.html.twig', array("buffer" => $this->buffer));
     }
 
     /*
@@ -161,185 +151,44 @@ class BatchController extends Controller
         $this->buffer .= "<p>Begin source parsing for nodes</p>";
         echo "<p>Begin source parsing for nodes</p>";
 
-        $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
+        $em = $this->getDoctrine()->getManager();
+        $results = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, $relDir);
+        $nodes_from_types = $results["nodes_from_types"];
+        $mainId = $results["mainId"];
 
-        // Ciblage explicite d'une relation par son ID
-        if (isset($relid) && $relid > 0) {
-            $url .= "&rel={$relid}";
-        }
-        else {
-            // Exclusion des relations entrantes
-            if (in_array($relDir, array("relout", "none"))) {
-                $url .= "&relin=norelin";
-            }
-            // Exclusion des relations sortantes
-            if (in_array($relDir, array("relin", "none"))) {
-                $url .= "&relout=norelout";
-            }
-        }
+        // Pour chaque type de noeuds
+        foreach ($nodes_from_types as $typeId => $nodes) {
 
-        // réglage de timeout pour file_get_contents avec
-        // backup et restauration de la valeur existante
-        // après l'opération
-        $default_socket_timeout = ini_get('default_socket_timeout');
-        ini_set('default_socket_timeout', 60*3);
-        $src = file_get_contents($url);
-        //$src = file_get_contents("rezo-dump_source_cheval.html");
-        ini_set('default_socket_timeout', $default_socket_timeout);
-        // Conversion de l'encodage de la page source en UTF-8
-        $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
+            $this->buffer .= "<hr /><p>Nodes of type : <pre>$typeId</pre></p>";
 
-        // Le premier noeud matché est le noeud principal
-        // les noeuds/termes (Entries) : e;eid;'name';type;w;'formated name'
-        // e;73893;'singe';1;864
-        $matches = array();
-        $pattern_main_node = "/e;(\d+);'(.+?)';(\d+);(\d+)(;'([^\n]+)')?\n?/";
-        $matched = preg_match($pattern_main_node, $src, $matches);
+            // e;3739399;'cabriole>83824';1;0;'cabriole>équitation'
+            // /e;(\d+);'(.+?)';{$typeId};(\d+);('(.+?)')?\n?/
 
-        if (1 !== $matched) {
-            $message = "Le noeud principal n'a pas été trouvé dans le code source JDM.";
-            $message .= "Code source : <hr />". htmlentities(substr($src, 0, 1000));
-            throw new \Exception($message);
-        }
+            // Pour chaque noeud de ce type
+            foreach ($nodes as $index => $nodeData) {
 
-        // on conserve son ID pour le sauter dans la boucle d'insertion générale.
-        $mainId = $matches[1];
-        $mainData = array();
-        $mainData["id"] = $mainId;
-        $mainData["name"] = $matches[2];
-        $mainData["type"] = $matches[3];
-        $mainData["weight"] = $matches[4];
-        $mainData["formatted_name"] = $matches[5] ?? "";
-        // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
+                echo "<p>\$nodeData[1] = $nodeData[1]</p>";
+                // Le noeud principal est déjà enregistré en tant que tel
+                // on le passe.
+                if ($nodeData[1] === $mainId) {
 
-        // Pattern collection by node type
-        // generic node pattern : (^e;\d+;'.+';\d+;\d+(;'.+')?\n)+
-        // Node types :
-        // nt;0;'n_generic'
-        // nt;1;'n_term'
-        // nt;2;'n_form'
-        // nt;4;'n_pos'
-        // nt;6;'n_flpot'
-        // nt;8;'n_chunk'
-        // nt;9;'n_question'
-        // nt;10;'n_relation'
-        // nt;12;'n_analogy'
-        // nt;18;'n_data'
-        // nt;36;'n_data_pot'
-        // nt;444;'n_link'
-        // nt;666;'n_AKI'
-        // nt;777;'n_wikipedia'
-        // nt;1002;'n_group'
-
-        // IDs des types de noeuds connus
-        $node_types =  array_merge(range(0,12), array(18, 36, 444, 666, 777, 1002));
-        $nodes_from_types = array();
-
-        // Pour chaque type de noeud
-        foreach ($node_types as $typeId) {
-
-            // On génère un pattern
-            $nodes_from_type_pattern = "/e;(\d+);'(.+?)';{$typeId};(\d+)(;'([^\n]+)')?\n?/";
-            // On récupère les noeuds de ce type
-            $matched = preg_match_all($nodes_from_type_pattern, $src, $matches, PREG_SET_ORDER);
-            // On les range dans un tableau
-            $nodes_from_types[$typeId] = $matches;
-        }
-
-        try {
-            // Connexion à la base de donnée
-            if (($em = $this->get('doctrine')->getManager()) != null) {
-
-                //$this->buffer .='Connected to the SQLite database successfully!';
-                $this->buffer .='Connected to the MySQL database successfully!';
-
-                $sqlInit = "SET NAMES 'utf8';";
-                $em->getConnection()->executeQuery($sqlInit);
-
-                // SQLite Upsert
-                $sql = "INSERT OR REPLACE INTO node (id, name, id_type, weight, formatted_name) 
-						VALUES (?, ?, ?, ?, ?)
-                        ON CONFLICT(id) DO UPDATE 
-                        SET name = excluded.name,
-                        id_type = excluded.id_type,
-                        weight = excluded.weight,
-                        formatted_name = excluded.formatted_name;";
-
-                // MySQL Upsert
-                $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name) 
-						VALUES (?, ?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE 
-                        name = VALUES(name),
-                        id_type = VALUES(id_type),
-                        weight = VALUES(weight),
-                        formatted_name = VALUES(formatted_name);";
-
-                $insertStmt = $em->getConnection()->prepare($sql);
-
-                // Pour chaque type de noeuds
-                foreach ($nodes_from_types as $typeId => $nodes) {
-
-                    $this->buffer .= "<hr /><p>Nodes of type : <pre>$typeId</pre></p>";
-
-                    // e;3739399;'cabriole>83824';1;0;'cabriole>équitation'
-                    // /e;(\d+);'(.+?)';{$typeId};(\d+);('(.+?)')?\n?/
-
-                    // Pour chaque noeud de ce type
-                    foreach ($nodes as $index => $nodeData) {
-
-                        $name = $nodeData[2] ?? null;
-                        $weight = $nodeData[3] ?? null;
-                        $formattedName = $nodeData[5] ?? null;
-
-                        // Le noeud principal est déjà enregistré en tant que tel
-                        // on le passe.
-                        if ($nodeData[1] === $mainId) {
-                            continue;
-                        }
-
-                        $this->buffer .= "<p>Node ID = {$nodeData[1]}<br />";
-                        //$decodedName = $this->convertUtf8codes(urldecode($name));
-                        $decodedName = trim(urldecode($name), " \t\n\r\0\x0B'");
-                        $decodedName = $this->convertUtf8codes($decodedName);
-                        //$decodedName = $em->getConnection()->quote($decodedName);
-
-                        //$this->buffer .= "Node \$decodedName = "+ $decodedName +"<br />";
-                        $this->buffer .= "Node \$weight = $weight<br />";
-                        $this->buffer .= "Node \$formattedName = $formattedName</p>";
-
-                        $insertStmt->bindValue(1, /*id*/ $nodeData[1]);
-                        $insertStmt->bindValue(2, /*name*/ $decodedName);
-                        $insertStmt->bindValue(3, /*type*/ $typeId);
-                        $insertStmt->bindValue(4, /*weight*/ $weight);
-                        $insertStmt->bindValue(5, /*formatted_name*/ $formattedName);
-
-                        $insertStmt->execute();
-                    }
-
-                    // Enregistrement du noeud principal en tant que tel
-                    $em->getRepository("JdmapiBundle:Node")->insertMain($mainData);
+                    $mainData = array();
+                    $mainData["id"] = $mainId;
+                    $mainData["name"] = $nodeData[2];
+                    $mainData["type"] = $typeId;
+                    $mainData["weight"] = $nodeData[3];
+                    $mainData["formatted_name"] = $nodeData[5] ?? "";
+                    // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
+                    continue;
                 }
-
+                $returned = $em->getRepository("JdmapiBundle:Node")->insert($typeId, $nodeData);
             }
-            else {
-                //$this->buffer .= 'Whoops, could not connect to the SQLite database!';
-                $this->buffer .= 'Whoops, could not connect to the MySQL database!';
-            }
-
-        } catch (\PDOException $e) {
-            echo "<p>Inserting of word « $decodedName » has thrown an exception : '". $e->getMessage() ."'.</p>";
-            $this->buffer .= 'Some insertions were skipped: ' . $e->getMessage();
         }
+        // Enregistrement du noeud principal en tant que tel
+        $em->getRepository("JdmapiBundle:Node")->insertMain($mainData);
 
-        // Renvoi les nodes classés par type si demandé (mode fonctionnel applicatif)
-        if (true === $returnresults) {
-            return $nodes_from_types;
-        }
         // Affiche un récupitalatif (mode batch d'insertion seul)
-        else {
-            return $this->render('@Jdmapi/batch/insertnodes.html.twig', array("buffer" => $this->buffer));
-        }
-
+        return $this->render('@Jdmapi/batch/insertnodes.html.twig', array("buffer" => $this->buffer));
      }
 
 
@@ -550,52 +399,7 @@ class BatchController extends Controller
         else {
             return $this->render('@Jdmapi/batch/insertrels.html.twig', array("buffer" => $this->buffer));
         }
-
    }
-
-   public static function convertUtf8codes(string $word) {
-
-        $pattern = "/\x{0000}-\x{ffff}/u";
-        $match = array();
-        $return = $word;
-
-       echo "<p>\$word in convertUtf8codes = $word</p>";
-
-        while (preg_match($pattern, $word,$match)) {
-
-            $codePoint = $match[0];
-            $hexa = substr($codePoint, 4);
-
-            echo "<p>\$word = $word</p>";
-            echo "<p>\$codePoint = $codePoint</p>";
-            echo "<p>\$hexa = $hexa</p>";
-
-            $ascii = hexdec($hexa);
-
-            echo "<p>\$ascii = $ascii</p>";
-
-            if (is_int($ascii)) {
-                $char = chr($ascii);
-                $return = str_replace($hexa, $char, $word);
-            } else {
-                continue;
-            }
-        }
-       echo "<p>\$return = $return</p>";
-
-       return $return;
-
-//        $search = array(
-//            "\\u009c",
-//            "\\u00e8"
-//        );
-//       $replace = array(
-//           "œ",
-//           "è"
-//       );
-//       return str_replace($search, $replace, $word);
-   }
-
 
    public function __invoke($call)
    {
