@@ -17,6 +17,7 @@ class NodeController extends Controller
     protected $defaultExcludeRelin = false;
     protected $defaultExcludeRelout = false;
     protected $batchService;
+    protected $buffer = "";
 
 //    public function __construct()
 //    {
@@ -123,14 +124,114 @@ class NodeController extends Controller
 
         $em = $this->getDoctrine()->getManager();
         $resultsN = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, "*");
-        $nodes = $resultsN["nodes_from_types"];
+        $nodes_from_types = $resultsN["nodes_from_types"];
         $mainId = $resultsN["mainId"];
         $resultsR = $em->getRepository("JdmapiBundle:Relation")->getRelsFromType($urlencodedterm, "*");
         $relations = array(
             "incoming_rels_from_types" => $resultsR["incoming_rels_from_types"],
             "outgoing_rels_from_types" => $resultsR["outgoing_rels_from_types"]
         );
-        return array("nodes" => $nodes, "relations" => $relations, "mainId" => $mainId);
+
+        $em->getRepository("JdmapiBundle:Node")->setConnectionChannelUtf8();
+
+        // Insertion des noeuds dans la base de donnée
+        //******************************************************
+
+        // Pour chaque type de noeuds
+        foreach ($nodes_from_types as $typeId => $nodes) {
+
+            $this->buffer .= "<hr /><p>Nodes of type : <pre>$typeId</pre></p>";
+
+            // e;3739399;'cabriole>83824';1;0;'cabriole>équitation'
+            // /e;(\d+);'(.+?)';{$typeId};(\d+);('(.+?)')?\n?/
+
+            // Pour chaque noeud de ce type
+            foreach ($nodes as $index => $nodeData) {
+                
+                // Le noeud principal est déjà enregistré en tant que tel
+                // on le passe.
+                if ($nodeData[1] === $mainId) {
+
+                    $mainData = array();
+                    $mainData["id"] = $mainId;
+                    $mainData["name"] = $nodeData[2];
+                    $mainData["type"] = $typeId;
+                    $mainData["weight"] = $nodeData[3];
+                    $mainData["formatted_name"] = $nodeData[5] ?? "";
+                    // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
+                    continue;
+                }
+                $returned = $em->getRepository("JdmapiBundle:Node")->insert($typeId, $nodeData);
+            }
+        }
+        // Enregistrement du noeud principal en tant que tel
+        $em->getRepository("JdmapiBundle:Node")->insertMain($mainData);
+
+
+
+        // Insertion des relations entrantes pour ce noeud
+        // ====================================================
+
+        // For each relation type array entry
+        foreach ($resultsR["incoming_rels_from_types"] as $type_id => $relations) {
+
+            $this->buffer .="<hr /><p>Incoming relations of type : <pre>$type_id</pre></p>";
+
+            foreach ($relations as $index => $relationData) {
+
+                $id_relation = $relationData[1];
+                $id_node1 = $relationData[2];
+                $weight = $relationData[3] ?? null;
+
+                $this->buffer .="<p>Relation ID = $id_relation<br />";
+                $this->buffer .="Relation \$id_node1 = $id_node1<br />";
+                $this->buffer .="Relation \$weight = $weight</p>";
+
+                $relDataParam = array();
+                $relDataParam["id"] = $id_relation;
+                $relDataParam["id_node1"] = $id_node1;
+                $relDataParam["id_node2"] = $mainId;
+                $relDataParam["type_id"] = $type_id;
+                $relDataParam["weight"] = $weight;
+
+                $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
+            }
+        }
+
+
+        // Insertion des relations sortantes pour ce noeud
+        // ====================================================
+
+        // For each relation type array entry
+        foreach ($resultsR["outgoing_rels_from_types"] as $type_id => $relations) {
+
+            $this->buffer .="<hr /><p>Outgoing relations of type : <pre>$type_id</pre></p>";
+
+            foreach ($relations as $index => $relationData) {
+
+                // les relations entrantes : r;rid;node1;node2;type;w
+                // r;9348721;44320;145246;0;-20
+
+                $id_relation = $relationData[1];
+                $id_node2 = $relationData[2];
+                $weight = $relationData[3] ?? null;
+
+                $this->buffer .="<p>Relation ID = $id_relation<br />";
+                $this->buffer .="Relation \$id_node2 = $id_node2<br />";
+                $this->buffer .="Relation \$weight = $weight</p>";
+
+                $relDataParam = array();
+                $relDataParam["id"] = $id_relation;
+                $relDataParam["id_node1"] = $mainId;
+                $relDataParam["id_node2"] = $id_node2;
+                $relDataParam["type_id"] = $type_id;
+                $relDataParam["weight"] = $weight;
+
+                $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
+            }
+        }
+
+        return array("nodes" => $nodes_from_types, "relations" => $relations, "mainId" => $mainId);
     }
 
 }
