@@ -11,6 +11,30 @@ namespace UM\JdmapiBundle\Repository;
 class RelationRepository extends \Doctrine\ORM\EntityRepository
 {
     protected $stmts = array();
+    protected $sources = array();
+
+    /**
+     * Renvoie le code source de Rezo-dump pour la requête
+     * @return string
+     */
+    public function getSource($key): string
+    {
+        if (isset($this->sources[$key]) && !empty($this->sources[$key])) {
+            return $this->sources[$key];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Enregistre le code source récupéré sur Rezo-dump pour réutilisation
+     */
+    public function setSource(string $key, string $src)
+    {
+        if (!empty($src)) {
+            return $this->sources[$key] = $src;
+        }
+    }
 
     /*
      * Renvoie les relations entrantes d'un noeud d'ID $nodeId
@@ -106,13 +130,21 @@ class RelationRepository extends \Doctrine\ORM\EntityRepository
      */
     public function getRelsFromType(String $urlencodedterm, String $relDir = "*") {
 
-        $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
+        // Récupération du code source préalablement requêté et enregistré s'il existe
+        $sourceKey = serialize($urlencodedterm . $relDir);
 
-        // Ciblage explicite d'une relation par son ID
-        if (isset($relid) && $relid > 0) {
-            $url .= "&rel={$relid}";
-        }
-        else {
+        $em = $this->getEntityManager();;
+        $existingSrc = $em->getRepository("JdmapiBundle:Node")->getSource($sourceKey);
+
+        // Code source préexistant
+        if (!is_null($existingSrc)) {
+            $src = $existingSrc;
+
+            // Nouvellle requête rezo-dump
+        } else {
+
+            $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
+
             // Exclusion des relations entrantes
             if (in_array($relDir, array("relout", "none"))) {
                 $url .= "&relin=norelin";
@@ -121,22 +153,18 @@ class RelationRepository extends \Doctrine\ORM\EntityRepository
             if (in_array($relDir, array("relin", "none"))) {
                 $url .= "&relout=norelout";
             }
+
+            // réglage de timeout pour file_get_contents avec
+            // backup et restauration de la valeur existante
+            // après l'opération
+            $default_socket_timeout = ini_get('default_socket_timeout');
+            ini_set('default_socket_timeout', 60*3);
+            $src = file_get_contents($url);
+            //$src = file_get_contents("rezo-dump_source_cheval.html");
+            ini_set('default_socket_timeout', $default_socket_timeout);
+            // Conversion de l'encodage de la page source en UTF-8
+            $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
         }
-
-        /*echo "<pre>";
-        print_r($url);
-        echo "</pre>";
-        exit();*/
-
-        // réglage de timeout pour file_get_contents avec
-        // backup et restauration de la valeur existante
-        // après l'opération
-        $default_socket_timeout = ini_get('default_socket_timeout');
-        ini_set('default_socket_timeout', 60*3);
-        $src = file_get_contents($url);
-        ini_set('default_socket_timeout', $default_socket_timeout);
-        // Conversion de l'encodage de la page source en UTF-8
-        $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
 
         try {
 

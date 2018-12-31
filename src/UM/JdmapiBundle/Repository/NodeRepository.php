@@ -11,6 +11,30 @@ namespace UM\JdmapiBundle\Repository;
 class NodeRepository extends \Doctrine\ORM\EntityRepository
 {
     protected $stmts = array();
+    protected $sources = array();
+
+    /**
+     * Renvoie le code source de Rezo-dump pour la requête
+     * @return string
+     */
+    public function getSource($key): string
+    {
+        if (isset($this->sources[$key]) && !empty($this->sources[$key])) {
+            return $this->sources[$key];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Enregistre le code source récupéré sur Rezo-dump pour réutilisation
+     */
+    public function setSource(string $key, string $src)
+    {
+        if (!empty($src)) {
+            return $this->sources[$key] = $src;
+        }
+    }
 
     /*
      * Teste l'existence d'un node/term dans la base locale
@@ -337,6 +361,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         ini_set('default_socket_timeout', $default_socket_timeout);
         // Conversion de l'encodage de la page source en UTF-8
         $src = mb_convert_encoding($src, "UTF-8", "ISO-8859-1");
+
+        // Enregistrement du code source pour réutilisation
+        $sourceKey = serialize($urlencodedterm . $relDir);
+        $this->setSource($sourceKey, $src);
 
         // Le premier noeud matché est le noeud principal
         // les noeuds/termes (Entries) : e;eid;'name';type;w;'formated name'

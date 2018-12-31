@@ -147,7 +147,7 @@ class NodeController extends Controller
 
             // Pour chaque noeud de ce type
             foreach ($nodes as $index => $nodeData) {
-                
+
                 // Le noeud principal est déjà enregistré en tant que tel
                 // on le passe.
                 if ($nodeData[1] === $mainId) {
@@ -231,7 +231,11 @@ class NodeController extends Controller
             }
         }
 
-        return array("nodes" => $nodes_from_types, "relations" => $relations, "mainId" => $mainId);
+        return array(
+            "nodes" => $nodes_from_types,
+            "relations" => array("incoming" => $resultsR["incoming_rels_from_types"],
+                                 "outgoing" => $resultsR["outgoing_rels_from_types"]  ),
+            "mainId" => $mainId);
     }
 
 }
