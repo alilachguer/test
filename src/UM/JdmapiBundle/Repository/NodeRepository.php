@@ -22,7 +22,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         if (isset($this->sources[$key]) && !empty($this->sources[$key])) {
             return $this->sources[$key];
         } else {
-            return null;
+            return "";
         }
     }
 
@@ -155,6 +155,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 N.id_type AS main_node_id_type,
                 N.weight AS main_node_weight,
                 N.formatted_name AS main_node_formatted_name,
+                N.definitions AS main_node_serialized_definition_array,
                 --
                 D.id AS rel_node_id,
                 D.name AS rel_node_name, 
@@ -340,6 +341,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
 
     // Récupération des définition d'un noeud dans le code source
+    // Extraction du bloc de définition et appel à sous-fonction
+    // pour renvoyer chaque définition dans un tableau
     protected function getDefinitions(string $src) {
 
         $definitions = array();
@@ -357,14 +360,16 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         return $definitions;
     }
 
-    // Renvoi les différentes définitions d'un mot dans un tableau
+    // Renvoie les différentes définitions d'un mot dans un tableau
+    // à partir du bloc de définitions contenu dans le code source
+    // de rezo-dump
     protected function splitDefinitions (string $strDefinitions) {
 
         // Extraction de chaque définition depuis le bloc des définitions
-        $pattern = "#(?<=<br\s\/>\n)\d+\.(\s+[^<]+)#";
+        $pattern = "#(?<=<br\s\/>\n)(\d+\.\s+)?([^<]+)#";
         $matched = preg_match_all($pattern, $strDefinitions, $matches);
 
-        return array("definitions" => $matches, "nbrDefinitions" => $matched);
+        return array("definitions" => $matches[2], "nbrDefinitions" => $matched);
     }
 
 
@@ -376,6 +381,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
         $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
+
+        // echo "<p>\$url = $url</p>";
 
         // Exclusion des relations entrantes
         if (in_array($relDir, array("relout", "none"))) {

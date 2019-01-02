@@ -21,13 +21,6 @@ class NodeController extends Controller
     protected $buffer = "";
     protected $session;
 
-//    public function __construct()
-//    {
-//        parent::__contruct();
-//        $this->batchService =
-//
-//    }
-
     public function indexAction()
     {
     	return $this->render('node/index.html.twig');
@@ -58,8 +51,7 @@ class NodeController extends Controller
 		 $type_relation = new Relation_type();
 		 $em->persist($type_relation);
 		 $type_relation->setName("isa");
-		
-        
+
          $em->flush();
 	}
 
@@ -97,7 +89,7 @@ class NodeController extends Controller
 
         $previousState = $this->get('jdmapi.batch')->setMaxResourcesState();
 
-        // Le terme est présent dans la base locale : requête la base locale
+        // Le terme est présent dans la base locale en tant que terme principal : requête la base locale
         if (is_numeric($id) && $id > 0) {
 
             echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
@@ -105,7 +97,7 @@ class NodeController extends Controller
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
         }
-        // Le terme n'est pas présent dans la base locale : requête sur le site distant
+        // Le terme n'est pas présent dans la base locale en tant que terme principal : requête sur le site distant
         else {
 
             echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
@@ -140,9 +132,15 @@ class NodeController extends Controller
         // Affichage d'un message si pas de définition pour le mot
         if (isset($resultsN["definitions"]["message"])) {
             $this->session->getFlashBag()->add("info", $resultsN["definitions"]["message"]);
+            $definitions = array();
+
+        // Une ou des définitions existent pour le mot.
+        // On désérialise le tableau pour le renvoyer dans les resultats
+        } else {
+            $definitions = $resultsN["definitions"]["definitions"];
         }
 
-        $resultsR = $em->getRepository("JdmapiBundle:Relation")->getRelsFromType($urlencodedterm, "*");
+        $resultsR = $em->getRepository("JdmapiBundle:Relation")->getRelsFromTypes($urlencodedterm, "*");
 
         $em->getRepository("JdmapiBundle:Node")->setConnectionChannelUtf8();
 
@@ -248,7 +246,9 @@ class NodeController extends Controller
             "nodes" => $nodes_from_types,
             "relations" => array("incoming" => $resultsR["incoming_rels_from_types"],
                                  "outgoing" => $resultsR["outgoing_rels_from_types"]  ),
-            "mainId" => $mainId);
+            "mainId" => $mainId,
+            "definitions" => $definitions
+        );
     }
 
 }
