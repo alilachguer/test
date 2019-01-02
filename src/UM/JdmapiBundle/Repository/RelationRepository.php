@@ -130,14 +130,19 @@ class RelationRepository extends \Doctrine\ORM\EntityRepository
      */
     public function getRelsFromType(String $urlencodedterm, String $relDir = "*") {
 
+        $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
+
         // Récupération du code source préalablement requêté et enregistré s'il existe
         $sourceKey = serialize($urlencodedterm . $relDir);
+
+        // echo "<p>\$sourceKey = $sourceKey</p>";
 
         $em = $this->getEntityManager();;
         $existingSrc = $em->getRepository("JdmapiBundle:Node")->getSource($sourceKey);
 
         // Code source préexistant
         if (!is_null($existingSrc)) {
+            
             $src = $existingSrc;
 
             // Nouvellle requête rezo-dump

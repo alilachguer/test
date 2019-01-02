@@ -85,6 +85,11 @@ class NodeController extends Controller
             }
         }
 
+        // Traitement des caractères accentués
+
+        //var_dump(utf8_encode(rawurldecode($urlencodedterm)));
+
+        $urlencodedterm = utf8_encode(rawurldecode($urlencodedterm));
         $id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
 
         $previousState = $this->get('jdmapi.batch')->setMaxResourcesState();

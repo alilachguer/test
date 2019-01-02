@@ -45,6 +45,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $em = $this->getEntityManager();
         $conn = $em->getConnection();
 
+        echo "<p>\$urlencodedterm = $urlencodedterm</p>";
+
         // Si la requête préparée existe on la récupère et on l'exécute
         if (isset($this->stmts["existsLocally"]) && is_object($this->stmts["existsLocally"])
             && "Doctrine\DBAL\Driver\Statement" == get_class($this->stmts["existsLocally"])) {
@@ -100,6 +102,12 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $insertStmt->bindValue(3, /*type*/ $data["type"]);
         $insertStmt->bindValue(4, /*weight*/ $data["weight"]);
         $insertStmt->bindValue(5, /*formatted_name*/ $data["formatted_name"]);
+
+//            echo "<pre>";
+//            print_r($data);
+//            echo "\$sql = $sql";
+//            echo "</pre>";
+//            exit();
 
         $insertStmt->execute();
     }
@@ -328,27 +336,53 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //       return str_replace($search, $replace, $word);
     }
 
+
+    // Récupération des définition d'un noeud dans le code source
+    protected function getDefinitions(string $src) {
+
+        $definitions = array();
+            // Récupère l'ensemble des définitions
+        $pattern = "#<def>\n(.+\n)+</def>#";
+        $matched = preg_match($pattern, $src, $matches);
+
+        // Mot sans définition
+        if (1 !== $matched) {
+            $definitions["message"] = "Définition absente pour ce terme.";
+        // Définition(s) présentes
+        } else {
+            $definitions = $this->splitDefinitions($matches[0]);
+        }
+        return $definitions;
+    }
+
+    // Renvoi les différentes définitions d'un mot dans un tableau
+    protected function splitDefinitions (string $strDefinitions) {
+
+        // Extraction de chaque définition depuis le bloc des définitions
+        $definitions = array();
+        $pattern = "#(?<=<br\s\/>\n)\d+\.(\s+[^<]+)#";
+        $matched = preg_match_all($pattern, $strDefinitions, $matches);
+
+        return array("definitions" => $definitions, "nbrDefinitions" => $matched);
+    }
+
+
     /*
      * Requête rezo-dump avec un terme et un paramètrage optionnel des relations
      * liées à celui-ci. Renvoie les résultats dans un tableau avec l'ID du terme requêté.
      */
     public function getNodesFromTypes(String $urlencodedterm, String $relDir = "*") {
 
+        $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
-        // Ciblage explicite d'une relation par son ID
-        if (isset($relid) && $relid > 0) {
-            $url .= "&rel={$relid}";
+        // Exclusion des relations entrantes
+        if (in_array($relDir, array("relout", "none"))) {
+            $url .= "&relin=norelin";
         }
-        else {
-            // Exclusion des relations entrantes
-            if (in_array($relDir, array("relout", "none"))) {
-                $url .= "&relin=norelin";
-            }
-            // Exclusion des relations sortantes
-            if (in_array($relDir, array("relin", "none"))) {
-                $url .= "&relout=norelout";
-            }
+        // Exclusion des relations sortantes
+        if (in_array($relDir, array("relin", "none"))) {
+            $url .= "&relout=norelout";
         }
 
         // réglage de timeout pour file_get_contents avec
@@ -364,6 +398,9 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
         // Enregistrement du code source pour réutilisation
         $sourceKey = serialize($urlencodedterm . $relDir);
+
+        // echo "<p>\$sourceKey = $sourceKey</p>";
+
         $this->setSource($sourceKey, $src);
 
         // Le premier noeud matché est le noeud principal
@@ -381,6 +418,9 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
         // on conserve son ID pour le renvoyer dans les résultats.
         $mainId = $matches[1];
+
+        // Récupération des définitions pour ce mot
+        $definitions = $this->getDefinitions($src);
 
         // Pattern collection by node type
         // generic node pattern : (^e;\d+;'.+';\d+;\d+(;'.+')?\n)+
