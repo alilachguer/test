@@ -154,6 +154,10 @@ class BatchController extends Controller
         $nodes_from_types = $results["nodes_from_types"];
         $mainId = $results["mainId"];
 
+        if (isset($results["definitions"]["message"])) {
+            $request->getSession()->getFlashBag()->add("info", $results["definitions"]["message"]);
+        }
+
         $em->getRepository("JdmapiBundle:Node")->setConnectionChannelUtf8();
 
         // Pour chaque type de noeuds
@@ -178,6 +182,8 @@ class BatchController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
+                    $mainData["definitions"] = isset($results["definitions"]["definitions"]) ?
+                                               serialize($results["definitions"]["definitions"]) : "";
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
                     continue;
                 }

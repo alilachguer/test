@@ -6,6 +6,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 use UM\JdmapiBundle\Entity\node;
 use UM\JdmapiBundle\Entity\Node_type;
@@ -18,6 +19,7 @@ class NodeController extends Controller
     protected $defaultExcludeRelout = false;
     protected $batchService;
     protected $buffer = "";
+    protected $session;
 
 //    public function __construct()
 //    {
@@ -67,6 +69,7 @@ class NodeController extends Controller
 	public function getAction(Request $request, String $urlencodedterm, String $reldir, Int $returnresults,
                               String $reltypes = "all", String $nodetypes = "all") {
 
+        $this->session = $request->getSession();
 	    /*
 	     *  Test de présence du mot dans la base locale
 	     */
@@ -98,6 +101,7 @@ class NodeController extends Controller
         if (is_numeric($id) && $id > 0) {
 
             echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+            $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
         }
@@ -105,6 +109,7 @@ class NodeController extends Controller
         else {
 
             echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
+            $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.");
 
             //$results = $this->getRemote($request, $urlencodedterm);
             $results = $this->getRemote($urlencodedterm);
@@ -131,11 +136,13 @@ class NodeController extends Controller
         $resultsN = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, "*");
         $nodes_from_types = $resultsN["nodes_from_types"];
         $mainId = $resultsN["mainId"];
+
+        // Affichage d'un message si pas de définition pour le mot
+        if (isset($resultsN["definitions"]["message"])) {
+            $this->session->getFlashBag()->add("info", $resultsN["definitions"]["message"]);
+        }
+
         $resultsR = $em->getRepository("JdmapiBundle:Relation")->getRelsFromType($urlencodedterm, "*");
-        $relations = array(
-            "incoming_rels_from_types" => $resultsR["incoming_rels_from_types"],
-            "outgoing_rels_from_types" => $resultsR["outgoing_rels_from_types"]
-        );
 
         $em->getRepository("JdmapiBundle:Node")->setConnectionChannelUtf8();
 
@@ -163,6 +170,7 @@ class NodeController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
+                    $mainData["definitions"] = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
                     continue;
                 }

@@ -85,14 +85,15 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             }
         }*/
 
-        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main) 
-                VALUES (?, ?, ?, ?, ?, 1)
+        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main, definitions) 
+                VALUES (?, ?, ?, ?, ?, 1, ?)
                 ON DUPLICATE KEY UPDATE 
                 name = VALUES(name),
                 id_type = VALUES(id_type),
                 weight = VALUES(weight),
                 formatted_name = VALUES(formatted_name),
-                is_main = 1;";
+                is_main = 1,
+                definitions = VALUES(definitions);";
 
         $em = $this->getEntityManager();
         $insertStmt = $em->getConnection()->prepare($sql);
@@ -102,6 +103,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $insertStmt->bindValue(3, /*type*/ $data["type"]);
         $insertStmt->bindValue(4, /*weight*/ $data["weight"]);
         $insertStmt->bindValue(5, /*formatted_name*/ $data["formatted_name"]);
+        $insertStmt->bindValue(6, /*formatted_name*/ $data["definitions"]);
 
 //            echo "<pre>";
 //            print_r($data);
@@ -274,10 +276,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             $decodedName = trim(urldecode($name), " \t\n\r\0\x0B'");
             $decodedName = $this->convertUtf8codes($decodedName);
 
-            // echo "<p>Node ID = {$nodeData[1]}<br />";
-            // echo "Node \$decodedName = "+ $decodedName +"<br />";
-            // echo "Node \$weight = $weight<br />";
-            // echo "Node \$formattedName = $formattedName</p>";
+//             echo "<p>Node ID = {$nodeData[1]}<br />";
+//             echo "Node \$decodedName = ". $decodedName ."<br />";
+//             echo "Node \$weight = $weight<br />";
+//             echo "Node \$formattedName = $formattedName</p>";
 
             $insertStmt->bindValue(1, /*id*/ $nodeData[1]);
             $insertStmt->bindValue(2, /*name*/ $decodedName);
@@ -359,11 +361,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
     protected function splitDefinitions (string $strDefinitions) {
 
         // Extraction de chaque définition depuis le bloc des définitions
-        $definitions = array();
         $pattern = "#(?<=<br\s\/>\n)\d+\.(\s+[^<]+)#";
         $matched = preg_match_all($pattern, $strDefinitions, $matches);
 
-        return array("definitions" => $definitions, "nbrDefinitions" => $matched);
+        return array("definitions" => $matches, "nbrDefinitions" => $matched);
     }
 
 
@@ -455,7 +456,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             // On les range dans un tableau
             $nodes_from_types[$typeId] = $matches;
         }
-        return array("nodes_from_types" => $nodes_from_types, "mainId" => $mainId);
+        return array("nodes_from_types" => $nodes_from_types, "mainId" => $mainId, "definitions" => $definitions);
     }
 
     /*
