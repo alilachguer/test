@@ -154,6 +154,10 @@ class BatchController extends Controller
         $nodes_from_types = $results["nodes_from_types"];
         $mainId = $results["mainId"];
 
+        if (isset($results["definitions"]["message"])) {
+            $request->getSession()->getFlashBag()->add("info", $results["definitions"]["message"]);
+        }
+
         $em->getRepository("JdmapiBundle:Node")->setConnectionChannelUtf8();
 
         // Pour chaque type de noeuds
@@ -178,6 +182,8 @@ class BatchController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
+                    $mainData["definitions"] = isset($results["definitions"]["definitions"]) ?
+                                               serialize($results["definitions"]["definitions"]) : "";
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
                     continue;
                 }
@@ -214,29 +220,32 @@ class BatchController extends Controller
         // Insertion des relations entrantes pour ce noeud
         // ====================================================
 
-        // For each relation type array entry
-        foreach ($incoming_rels_from_types as $type_id => $relations) {
+        if (is_array($incoming_rels_from_types) && !empty($incoming_rels_from_types)) {
 
-            $this->buffer .="<hr /><p>Incoming relations of type : <pre>$type_id</pre></p>";
+            // For each relation type array entry
+            foreach ($incoming_rels_from_types as $type_id => $relations) {
 
-            foreach ($relations as $index => $relationData) {
+                $this->buffer .="<hr /><p>Incoming relations of type : <pre>$type_id</pre></p>";
 
-                $id_relation = $relationData[1];
-                $id_node1 = $relationData[2];
-                $weight = $relationData[3] ?? null;
+                foreach ($relations as $index => $relationData) {
 
-                $this->buffer .="<p>Relation ID = $id_relation<br />";
-                $this->buffer .="Relation \$id_node1 = $id_node1<br />";
-                $this->buffer .="Relation \$weight = $weight</p>";
+                    $id_relation = $relationData[1];
+                    $id_node1 = $relationData[2];
+                    $weight = $relationData[3] ?? null;
 
-                $relDataParam = array();
-                $relDataParam["id"] = $id_relation;
-                $relDataParam["id_node1"] = $id_node1;
-                $relDataParam["id_node2"] = $mainId;
-                $relDataParam["type_id"] = $type_id;
-                $relDataParam["weight"] = $weight;
+                    $this->buffer .="<p>Relation ID = $id_relation<br />";
+                    $this->buffer .="Relation \$id_node1 = $id_node1<br />";
+                    $this->buffer .="Relation \$weight = $weight</p>";
 
-                $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
+                    $relDataParam = array();
+                    $relDataParam["id"] = $id_relation;
+                    $relDataParam["id_node1"] = $id_node1;
+                    $relDataParam["id_node2"] = $mainId;
+                    $relDataParam["type_id"] = $type_id;
+                    $relDataParam["weight"] = $weight;
+
+                        $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
+                }
             }
         }
 
@@ -244,32 +253,35 @@ class BatchController extends Controller
         // Insertion des relations sortantes pour ce noeud
         // ====================================================
 
-        // For each relation type array entry
-        foreach ($outgoing_rels_from_types as $type_id => $relations) {
+        if (is_array($outgoing_rels_from_types) && !empty($outgoing_rels_from_types)) {
+
+            // For each relation type array entry
+            foreach ($outgoing_rels_from_types as $type_id => $relations) {
 
             $this->buffer .="<hr /><p>Outgoing relations of type : <pre>$type_id</pre></p>";
 
-            foreach ($relations as $index => $relationData) {
+                foreach ($relations as $index => $relationData) {
 
-                // les relations entrantes : r;rid;node1;node2;type;w
-                // r;9348721;44320;145246;0;-20
+                    // les relations entrantes : r;rid;node1;node2;type;w
+                    // r;9348721;44320;145246;0;-20
 
-                $id_relation = $relationData[1];
-                $id_node2 = $relationData[2];
-                $weight = $relationData[3] ?? null;
+                    $id_relation = $relationData[1];
+                    $id_node2 = $relationData[2];
+                    $weight = $relationData[3] ?? null;
 
-                $this->buffer .="<p>Relation ID = $id_relation<br />";
-                $this->buffer .="Relation \$id_node2 = $id_node2<br />";
-                $this->buffer .="Relation \$weight = $weight</p>";
+                    $this->buffer .="<p>Relation ID = $id_relation<br />";
+                    $this->buffer .="Relation \$id_node2 = $id_node2<br />";
+                    $this->buffer .="Relation \$weight = $weight</p>";
 
-                $relDataParam = array();
-                $relDataParam["id"] = $id_relation;
-                $relDataParam["id_node1"] = $mainId;
-                $relDataParam["id_node2"] = $id_node2;
-                $relDataParam["type_id"] = $type_id;
-                $relDataParam["weight"] = $weight;
+                    $relDataParam = array();
+                    $relDataParam["id"] = $id_relation;
+                    $relDataParam["id_node1"] = $mainId;
+                    $relDataParam["id_node2"] = $id_node2;
+                    $relDataParam["type_id"] = $type_id;
+                    $relDataParam["weight"] = $weight;
 
-                $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
+                    $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
+                }
             }
         }
 

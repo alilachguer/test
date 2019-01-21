@@ -128,21 +128,24 @@ class RelationRepository extends \Doctrine\ORM\EntityRepository
      * Requête rezo-dump avec un terme et un paramètrage optionnel des relations
      * liées à celui-ci. Renvoie les résultats dans un tableau avec l'ID du terme requêté.
      */
-    public function getRelsFromType(String $urlencodedterm, String $relDir = "*") {
+    public function getRelsFromTypes(String $urlencodedterm, String $relDir = "*") {
+
+        $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
 
         // Récupération du code source préalablement requêté et enregistré s'il existe
         $sourceKey = serialize($urlencodedterm . $relDir);
+
+        // echo "<p>\$sourceKey = $sourceKey</p>";
 
         $em = $this->getEntityManager();;
         $existingSrc = $em->getRepository("JdmapiBundle:Node")->getSource($sourceKey);
 
         // Code source préexistant
-        if (!is_null($existingSrc)) {
+        if (!empty($existingSrc)) {
             $src = $existingSrc;
 
             // Nouvellle requête rezo-dump
         } else {
-
             $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
             // Exclusion des relations entrantes
@@ -174,11 +177,27 @@ class RelationRepository extends \Doctrine\ORM\EntityRepository
 
             $matched = preg_match($node_id_pattern, $src,$matches);
 
+            // 1ère méthode d'identification
             if ($matched) {
                 $query_node_id = $matches[1];
-                $matches = array();
+
+            // Méthode d'identification secondaire
             } else {
-                throw new \Exception("Le Node ID du mot n'a pas été trouvé dans le code source.");
+                // Le premier noeud matché est le noeud principal
+                // les noeuds/termes (Entries) : e;eid;'name';type;w;'formated name'
+                // e;73893;'singe';1;864
+                $matches = array();
+                $pattern_main_node = "/e;(\d+);'(.+?)';(\d+);(\d+)(;'([^\n]+)')?\n?/";
+                $matched = preg_match($pattern_main_node, $src, $matches);
+
+                if (1 !== $matched) {
+                    $message = "Le noeud principal n'a pas été trouvé dans le code source JDM.";
+                    $message .= "Code source : <hr />". htmlentities(substr($src, 0, 1000));
+                    throw new \Exception($message);
+                } else {
+                    // on conserve son ID pour le renvoyer dans les résultats.
+                    $query_node_id = $matches[1];
+                }
             }
         }
         catch (\Exception $e) {

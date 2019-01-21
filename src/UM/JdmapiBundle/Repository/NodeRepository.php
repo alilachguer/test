@@ -22,7 +22,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         if (isset($this->sources[$key]) && !empty($this->sources[$key])) {
             return $this->sources[$key];
         } else {
-            return null;
+            return "";
         }
     }
 
@@ -44,6 +44,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
     {
         $em = $this->getEntityManager();
         $conn = $em->getConnection();
+
+        //echo "<p>\$urlencodedterm = $urlencodedterm</p>";
 
         // Si la requête préparée existe on la récupère et on l'exécute
         if (isset($this->stmts["existsLocally"]) && is_object($this->stmts["existsLocally"])
@@ -83,15 +85,15 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             }
         }*/
 
-
-        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main)
-                VALUES (?, ?, ?, ?, ?, 1)
-                ON DUPLICATE KEY UPDATE
+        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main, definitions) 
+                VALUES (?, ?, ?, ?, ?, 1, ?)
+                ON DUPLICATE KEY UPDATE 
                 name = VALUES(name),
                 id_type = VALUES(id_type),
                 weight = VALUES(weight),
                 formatted_name = VALUES(formatted_name),
-                is_main = 1;";
+                is_main = 1,
+                definitions = VALUES(definitions);";
 
         $em = $this->getEntityManager();
         $insertStmt = $em->getConnection()->prepare($sql);
@@ -101,6 +103,13 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $insertStmt->bindValue(3, /*type*/ $data["type"]);
         $insertStmt->bindValue(4, /*weight*/ $data["weight"]);
         $insertStmt->bindValue(5, /*formatted_name*/ $data["formatted_name"]);
+        $insertStmt->bindValue(6, /*formatted_name*/ $data["definitions"]);
+
+//            echo "<pre>";
+//            print_r($data);
+//            echo "\$sql = $sql";
+//            echo "</pre>";
+//            exit();
 
         $insertStmt->execute();
     }
@@ -146,7 +155,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 N.id_type AS main_node_id_type,
                 N.weight AS main_node_weight,
                 N.formatted_name AS main_node_formatted_name,
-
+                N.definitions AS main_node_serialized_definition_array,
+                
                 D.id AS rel_node_id,
                 D.name AS rel_node_name,
                 D.id_type AS rel_node_id_type,
@@ -329,28 +339,58 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //       return str_replace($search, $replace, $word);
     }
 
+
+    // Récupération des définition d'un noeud dans le code source
+    // Extraction du bloc de définition et appel à sous-fonction
+    // pour renvoyer chaque définition dans un tableau
+    protected function getDefinitions(string $src) {
+
+        $definitions = array();
+            // Récupère l'ensemble des définitions
+        $pattern = "#<def>\n(.+\n)+</def>#";
+        $matched = preg_match($pattern, $src, $matches);
+
+        // Mot sans définition
+        if (1 !== $matched) {
+            $definitions["message"] = "Définition absente pour ce terme.";
+        // Définition(s) présentes
+        } else {
+            $definitions = $this->splitDefinitions($matches[0]);
+        }
+        return $definitions;
+    }
+
+    // Renvoie les différentes définitions d'un mot dans un tableau
+    // à partir du bloc de définitions contenu dans le code source
+    // de rezo-dump
+    protected function splitDefinitions (string $strDefinitions) {
+
+        // Extraction de chaque définition depuis le bloc des définitions
+        $pattern = "#(?<=<br\s\/>\n)(\d+\.\s+)?([^<]+)#";
+        $matched = preg_match_all($pattern, $strDefinitions, $matches);
+
+        return array("definitions" => $matches[2], "nbrDefinitions" => $matched);
+    }
+
+
     /*
      * Requête rezo-dump avec un terme et un paramètrage optionnel des relations
      * liées à celui-ci. Renvoie les résultats dans un tableau avec l'ID du terme requêté.
      */
     public function getNodesFromTypes(String $urlencodedterm, String $relDir = "*") {
 
-
+        $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
-        // Ciblage explicite d'une relation par son ID
-        if (isset($relid) && $relid > 0) {
-            $url .= "&rel={$relid}";
+        // echo "<p>\$url = $url</p>";
+
+        // Exclusion des relations entrantes
+        if (in_array($relDir, array("relout", "none"))) {
+            $url .= "&relin=norelin";
         }
-        else {
-            // Exclusion des relations entrantes
-            if (in_array($relDir, array("relout", "none"))) {
-                $url .= "&relin=norelin";
-            }
-            // Exclusion des relations sortantes
-            if (in_array($relDir, array("relin", "none"))) {
-                $url .= "&relout=norelout";
-            }
+        // Exclusion des relations sortantes
+        if (in_array($relDir, array("relin", "none"))) {
+            $url .= "&relout=norelout";
         }
 
         // réglage de timeout pour file_get_contents avec
@@ -366,6 +406,9 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
         // Enregistrement du code source pour réutilisation
         $sourceKey = serialize($urlencodedterm . $relDir);
+
+        // echo "<p>\$sourceKey = $sourceKey</p>";
+
         $this->setSource($sourceKey, $src);
 
         // Le premier noeud matché est le noeud principal
@@ -384,7 +427,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         // on conserve son ID pour le renvoyer dans les résultats.
         $mainId = $matches[1];
 
-
+        // Récupération des définitions pour ce mot
+        $definitions = $this->getDefinitions($src);
 
         // Pattern collection by node type
         // generic node pattern : (^e;\d+;'.+';\d+;\d+(;'.+')?\n)+
@@ -419,7 +463,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             // On les range dans un tableau
             $nodes_from_types[$typeId] = $matches;
         }
-        return array("nodes_from_types" => $nodes_from_types, "mainId" => $mainId);
+        return array("nodes_from_types" => $nodes_from_types, "mainId" => $mainId, "definitions" => $definitions);
     }
 
     /*
