@@ -1,0 +1,217 @@
+{% extends 'base.html.twig' %}
+ {% block body%}
+<div class="container top-margin">
+    <!-- Root accordian -->
+
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+          {% if results['relationsEntrantes'] is not empty %}
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseTypeRelIn">
+                        <h1>Relations entrantes du mot  </h1>
+                    </a>
+                </h4>
+            </div>
+
+            <!-- Here we insert another nested accordion -->
+            <div id="collapseTypeRelIn" class="panel-body collapse">
+                <div class="panel-inner">
+
+                    <div class="panel-group" id="accordionTypeRelIn">
+                        <div class="panel panel-default">
+                          {% for i in 0..((results['relationsEntrantes']|length)-1) %}
+                            <div class="panel-heading">
+                                <div class="panel-title ">
+                                    <a class="panel-toggle" data-toggle="collapse" data-parent="#accordionTypeRelIn"
+                                        href="#{{ results['relationsEntrantes'][i][0]['id_type_rel'] }}">
+                                        <h3>  type relation {{ results['relationsEntrantes'][i][0]['id_type_rel'] }} </h3>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Here we insert another nested accordion -->
+                            <div id="{{ results['relationsEntrantes'][i][0]['id_type_rel'] }}" class="panel-body collapse">
+                                <div class="panel-inner title-padding">
+
+                                    <div class="panel-group" id="accordion{{results['relationsEntrantes'][i][0]['id_type_rel']}}">
+                                        <div class="panel panel-default">
+                                          {% for rel in results['relationsEntrantes'][i] %}
+                                            <div class="panel">
+                                                <h4 class="panel-title">
+                                                    <a class="panel-toggle" data-toggle="collapse" data-parent="#accordion{{rel['id_type_rel']}}"
+                                                        href="#collapse{{ rel['id_node2_rel']}}">
+                                                        <h4><b>{{rel['rel_node_name']}}</b></h4>
+                                                    </a>
+                                                </h4>
+                                            </div>
+                                            <div id="collapse{{ rel['id_node2_rel']}}" class="panel-body collapse">
+                                                <div class="panel-inner">
+
+                                                    <div class="row">
+                                                        <div class="col-sm-12">
+                                                            <h4>Definition:</h4>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-12">
+                                                            <p><i>
+                                                              {{rel['rel_node_name']}}
+                                                                </i></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+
+                                        </div>
+                                    </div> <!--fin node -->
+                                    <!-- <div class="panel-group top-margin" id="accordionNodeOut2">
+                                        <div class="panel panel-default"> -->
+
+
+
+                                        <!-- </div>
+                                    </div> fin node -->
+                                    <!-- <div class="panel-group top-margin" id="accordionNodeOut3">
+                                        <div class="panel panel-default"> -->
+
+
+
+                                        <!-- </div>
+                                    </div> fin node -->
+                                    <!-- <div class="panel-group top-margin" id="accordionNodeOut4">
+                                        <div class="panel panel-default"> -->
+
+
+<!--
+                                        </div>
+                                    </div> fin node -->
+
+                                </div>
+                            </div>
+                            <!-- Inner accordion ends here -->
+                            {% endfor%}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {% endif%}
+            <!-- Inner accordion ends here -->
+
+        </div>
+        <!--
+            # relations sortantes
+            ###
+            ###
+            ##
+            ##
+            ##
+
+        -->
+
+        {% if results['relationsSortantes'] is not empty %}
+        <div class="panel panel-default">
+
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseTypeRelOut">
+                        <h1>Relations sortantes du mot </h1>
+                    </a>
+                </h4>
+            </div>
+
+            <!-- Here we insert another nested accordion -->
+            <div id="collapseTypeRelOut" class="panel-body collapse">
+                <div class="panel-inner">
+
+                    <div class="panel-group" id="accordionTypeRelOut">
+                        <div class="panel panel-default">
+                          {% for i in 0..((results['relationsSortantes']|length)-1) %}
+                            <div class="panel-heading">
+                                <div class="panel-title ">
+                                    <a class="panel-toggle" data-toggle="collapse" data-parent="#accordionTypeRelOut"
+                                        href="#{{ results['relationsSortantes'][i][0]['id_type_rel'] }}Out">
+                                        <h3>  type relation {{ results['relationsSortantes'][i][0]['id_type_rel'] }} </h3>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Here we insert another nested accordion -->
+                            <div id="{{ results['relationsSortantes'][i][0]['id_type_rel'] }}Out" class="panel-body collapse">
+                                <div class="panel-inner title-padding">
+
+                                    <div class="panel-group" id="accordion{{results['relationsSortantes'][i][0]['id_type_rel']}}Out">
+                                        <div class="panel panel-default">
+                                          {% for rel in results['relationsSortantes'][i] %}
+                                            <div class="panel">
+                                                <h4 class="panel-title">
+                                                    <a class="panel-toggle" data-toggle="collapse" data-parent="#accordion{{rel['id_type_rel']}}Out"
+                                                        href="#collapse{{ rel['id_node_rel']}}Out">
+                                                        <h4><b>{{rel['rel_node_name']}}</b></h4>
+                                                    </a>
+                                                </h4>
+                                            </div>
+                                            <div id="collapse{{ rel['id_node_rel']}}Out" class="panel-body collapse">
+                                                <div class="panel-inner">
+
+                                                    <div class="row">
+                                                        <div class="col-sm-12">
+                                                            <h4>Definition:</h4>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-12">
+                                                            <p><i>
+                                                              {{rel['rel_node_name']}}
+                                                                </i></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+
+                                        </div>
+                                    </div> <!--fin node -->
+                                    <!-- <div class="panel-group top-margin" id="accordionNodeOut2">
+                                        <div class="panel panel-default"> -->
+
+
+
+                                        <!-- </div>
+                                    </div> fin node -->
+                                    <!-- <div class="panel-group top-margin" id="accordionNodeOut3">
+                                        <div class="panel panel-default"> -->
+
+
+
+                                        <!-- </div>
+                                    </div> fin node -->
+                                    <!-- <div class="panel-group top-margin" id="accordionNodeOut4">
+                                        <div class="panel panel-default"> -->
+
+
+<!--
+                                        </div>
+                                    </div> fin node -->
+
+                                </div>
+                            </div>
+                            <!-- Inner accordion ends here -->
+                            {% endfor%}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {% endif %}
+            <!-- Inner accordion ends here -->
+
+        </div>
+    </div>
+    <!-- Root accordian ends here -->
+
+</div><!-- /lf-container -->
+
+{% endblock%}

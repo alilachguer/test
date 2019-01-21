@@ -24,7 +24,7 @@ class Relation
     /**
      * @var int
      *
-     * @ORM\Column(name="node1", type="integer")
+     * @ORM\Column(name=" id_node", type="integer")
      * @ORM\ManyToOne(targetEntity="node", inversedBy="id")
      */
     private $node1;
@@ -32,7 +32,7 @@ class Relation
     /**
      * @var int
      *
-     * @ORM\Column(name="node2", type="integer")
+     * @ORM\Column(name=" id_node2", type="integer")
      * @ORM\ManyToOne(targetEntity="node", inversedBy="id")
      */
     private $node2;
@@ -40,7 +40,7 @@ class Relation
     /**
      * @var int
      *
-     * @ORM\Column(name="type_relation", type="integer")
+     * @ORM\Column(name=" id_type", type="integer")
      * @ORM\ManyToOne(targetEntity="Relation_type", inversedBy="id")
      */
     private $typeRelation;
@@ -159,4 +159,3 @@ class Relation
         return $this->weight;
     }
 }
-

@@ -22,9 +22,6 @@ class DefaultController extends Controller
         $phpinfo = ob_get_clean();
 
         // replace this example code with whatever you need
-        return $this->render('default/index.html.twig', [
-            'base_dir' => realpath($this->getParameter('kernel.project_dir')).DIRECTORY_SEPARATOR,
-            'php_info' => $phpinfo
-        ]);
+        return $this->render('body.html.twig');
     }
 }

@@ -53,7 +53,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
         // Sinon on crée la requête on l'exécute et on l'enregistre
         } else {
-            $sql = "SELECT N.id FROM node N WHERE N.name = ? AND is_main = 1 LIMIT 1";
+            $sql = "SELECT N.id FROM node N WHERE Binary N.name = ? AND is_main = 1 LIMIT 1";
 
             $stmt = $conn->executeQuery($sql, array($urlencodedterm));
             $this->stmts["existsLocally"] = $stmt;
@@ -83,9 +83,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             }
         }*/
 
-        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main) 
+
+        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main)
                 VALUES (?, ?, ?, ?, ?, 1)
-                ON DUPLICATE KEY UPDATE 
+                ON DUPLICATE KEY UPDATE
                 name = VALUES(name),
                 id_type = VALUES(id_type),
                 weight = VALUES(weight),
@@ -139,37 +140,37 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             $em = $this->getEntityManager();
             $conn = $em->getConnection();
             $select = "
-                SELECT                 
+                SELECT
                 N.id AS main_node_id,
                 N.name AS main_node_name,
                 N.id_type AS main_node_id_type,
                 N.weight AS main_node_weight,
                 N.formatted_name AS main_node_formatted_name,
-                --
+
                 D.id AS rel_node_id,
-                D.name AS rel_node_name, 
+                D.name AS rel_node_name,
                 D.id_type AS rel_node_id_type,
                 D.weight AS rel_node_weight,
                 D.formatted_name AS rel_node_formatted_name,
                 D.is_main AS rel_node_is_main,
-                --
+
                 R.id AS id_rel,
                 R.id_node AS id_node_rel,
                 R.id_node2 AS id_node2_rel,
                 R.id_type AS id_type_rel,
                 R.weight AS weight_rel,
                 (R.id_node2 = N.id) AS is_relin,
-                (R.id_node = N.id) AS is_relout 
+                (R.id_node = N.id) AS is_relout
                 ";
 
-            $from = "FROM node N, relation R, node D 
+            $from = "FROM node N, relation R, node D
                 ";
-            $where = "WHERE N.id = ?                 
+            $where = "WHERE N.id = ?
                  AND (
-                    -- Relation entrante
+                    /* Relation entrante */
                     (N.id = R.id_node2 AND R.id_node = D.id)
                     OR
-                    -- Relation sortante
+                    /* Relation sortante */
                     (N.id = R.id_node AND R.id_node2 = D.id)
                   )
                  ";
@@ -177,14 +178,14 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
             if ($excludeRelin) {
                 // AND is_relin = 0
-                $where .= " AND (R.id_node2 = N.id) = 0 
+                $where .= " AND (R.id_node2 = N.id) = 0
                 ";
                 $excludeRelin = "true"; // String pour clé tableau stockage Statement
             }
 
             if ($excludeRelout) {
                 // AND is_relout = 0
-                $where .= " AND (R.id_node = N.id) = 0 
+                $where .= " AND (R.id_node = N.id) = 0
                    ";
                 $excludeRelout = "true"; // String pour clé tableau stockage Statement
             }
@@ -209,7 +210,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //            echo "\$sql = $sql";
 //            echo "</pre>";
 //            exit();
-            
+
             $stmt = $conn->executeQuery($sql, array($nodeId));
             $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection1][$sortDirection2] = $stmt;
         }
@@ -246,9 +247,9 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                             formatted_name = excluded.formatted_name;";*/
 
                 // MySQL Upsert
-                $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name) 
-						VALUES (?, ?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE 
+                $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name,is_main)
+						VALUES (?, ?, ?, ?, ?,0)
+                        ON DUPLICATE KEY UPDATE
                         name = VALUES(name),
                         id_type = VALUES(id_type),
                         weight = VALUES(weight),
@@ -291,7 +292,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $match = array();
         $return = $word;
 
-        echo "<p>\$word in convertUtf8codes = $word</p>";
+      //  echo "<p>\$word in convertUtf8codes = $word</p>";
 
         while (preg_match($pattern, $word,$match)) {
 
@@ -313,7 +314,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 continue;
             }
         }
-        echo "<p>\$return = $return</p>";
+    //    echo "<p>\$return = $return</p>";
 
         return $return;
 
@@ -333,6 +334,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
      * liées à celui-ci. Renvoie les résultats dans un tableau avec l'ID du terme requêté.
      */
     public function getNodesFromTypes(String $urlencodedterm, String $relDir = "*") {
+
 
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
@@ -381,6 +383,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
         // on conserve son ID pour le renvoyer dans les résultats.
         $mainId = $matches[1];
+
+
 
         // Pattern collection by node type
         // generic node pattern : (^e;\d+;'.+';\d+;\d+(;'.+')?\n)+
