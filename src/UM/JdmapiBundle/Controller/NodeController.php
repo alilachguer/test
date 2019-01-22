@@ -212,7 +212,6 @@ class NodeController extends Controller
                 $excludeRelin = true;
             }
         }
-
         // Traitement des caractères accentués
 
         //var_dump(utf8_encode(rawurldecode($urlencodedterm)));
@@ -239,6 +238,25 @@ class NodeController extends Controller
 
             //$results = $this->getRemote($request, $urlencodedterm);
             $this->getRemote($urlencodedterm);
+
+            $this->id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
+           if (is_numeric($this->id) && $this->id > 0) {
+
+             //  echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+
+               $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
+
+
+
+                 $results = $this->sortFinal($results) ;
+
+
+               // $results = array(
+               //     "relationsEntrantes" => $incoming_nodes,
+               //     "relationsSortantes" => $outgoing_nodes);
+
+           }
+
         }
 
         $this->get('jdmapi.batch')->resetResourcesStateToPrevious($previousState);
