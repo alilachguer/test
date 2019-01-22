@@ -6,7 +6,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 use UM\JdmapiBundle\Entity\node;
 use UM\JdmapiBundle\Entity\Node_type;
@@ -19,29 +19,17 @@ class NodeController extends Controller
     protected $defaultExcludeRelout = false;
     protected $batchService;
     protected $buffer = "";
+    protected $session;
     protected $i  ;
     protected $j  ;
     protected $id ;
 
 
-
-//    public function __construct()
-//    {
-//        parent::__contruct();
-//        $this->batchService =
-//
-//    }
-
-
-
-    public function cmpp($a,$b)
-    {
+    public function cmpp($a,$b) {
       return ($a["id_type_rel"] - $b["id_type_rel"]);
     }
 
-    public function sortFinal($results)
-
-    {
+    public function sortFinal($results) {
 
       $incoming_nodes = [];
       $outgoing_nodes = [];
@@ -53,8 +41,7 @@ class NodeController extends Controller
         else {
           array_push($outgoing_nodes,$value);
         }
-      }
-
+       }
 
         usort($incoming_nodes,array($this,"cmpp"));
         usort($outgoing_nodes,array($this,"cmpp"));
@@ -74,10 +61,7 @@ class NodeController extends Controller
             if( $this->i == -1) {}
             else {
               array_push($outgoing_nodesfinal, ${"arrayoftype" . $this->i});
-
-                 }
-
-
+            }
 
             // echo "<p>Le terme « $this->i est trouvé localement. Requête LOCALE.</p>";
 
@@ -85,12 +69,7 @@ class NodeController extends Controller
             ${"arrayoftype".$this->i} = [] ;
             array_push(${"arrayoftype" . $this->i}, $value);
 
-
-
-          }
-
-          else {
-
+          } else {
             array_push(${"arrayoftype".$this->i}, $value);
           }
 
@@ -114,15 +93,10 @@ class NodeController extends Controller
             ${"arrayoftype".$this->j} = [] ;
             array_push(${"arrayoftype" . $this->j}, $value);
 
-
-
-          }
-
-          else {
+          } else {
 
             array_push(${"arrayoftype".$this->j}, $value);
           }
-
 
         }
 
@@ -132,16 +106,11 @@ class NodeController extends Controller
                "relationsEntrantes" => $outgoing_nodesfinal);
         return $results ;
 
-
-
     }
 
-
-
-    public function indexAction()
-    {
+    public function indexAction() {
     	return $this->render('node/index.html.twig');
-	   }
+    }
 
 	public function createAction(){
 		$em = $this->getDoctrine()->getManager();
@@ -168,7 +137,6 @@ class NodeController extends Controller
 		 $type_relation = new Relation_type();
 		 $em->persist($type_relation);
 		 $type_relation->setName("isa");
-
 
          $em->flush();
 	}
@@ -201,7 +169,7 @@ class NodeController extends Controller
        $reltypes = "all";
        $nodetypes = "all" ;
        $returnresults = 0;
-       
+
        $urlencodedterm = $request->query->get('urlencodedterm');
        $out = $request->query->get('out');
        $in = $request->query->get('in');
@@ -216,7 +184,7 @@ class NodeController extends Controller
          $reldir = "relout";
        }
 
-       else 
+       else
        {
          $reldir = "relin";
        }
@@ -226,6 +194,7 @@ class NodeController extends Controller
 
 
 
+        $this->session = $request->getSession();
 	    /*
 	     *  Test de présence du mot dans la base locale
 	     */
@@ -244,50 +213,32 @@ class NodeController extends Controller
             }
         }
 
+        // Traitement des caractères accentués
+
+        //var_dump(utf8_encode(rawurldecode($urlencodedterm)));
+
+        $urlencodedterm = utf8_encode(rawurldecode($urlencodedterm));
         $this->id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
 
         $previousState = $this->get('jdmapi.batch')->setMaxResourcesState();
 
-        // Le terme est présent dans la base locale : requête la base locale
+        // Le terme est présent dans la base locale en tant que terme principal : requête la base locale
         if (is_numeric($this->id) && $this->id > 0) {
 
-          //  echo "<p>Le terme « $urlencodedterm » $this->id est trouvé localement. Requête LOCALE.</p>";
+            echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+            $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
-
-
-
-              $results = $this->sortFinal($results) ;
-
-            // $results = array(
-            //     "relationsEntrantes" => $incoming_nodes,
-            //     "relationsSortantes" => $outgoing_nodes);
-
+            $results = $this->sortFinal($results) ;
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
         else {
 
           //  echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
+          $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.");
 
             //$results = $this->getRemote($request, $urlencodedterm);
             $this->getRemote($urlencodedterm);
-            $this->id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
-            if (is_numeric($this->id) && $this->id > 0) {
-
-              //  echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
-
-                $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
-
-
-
-                  $results = $this->sortFinal($results) ;
-
-
-                // $results = array(
-                //     "relationsEntrantes" => $incoming_nodes,
-                //     "relationsSortantes" => $outgoing_nodes);
-
-            }
         }
 
         $this->get('jdmapi.batch')->resetResourcesStateToPrevious($previousState);
@@ -313,19 +264,24 @@ class NodeController extends Controller
         $resultsN = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, "*");
         $nodes_from_types = $resultsN["nodes_from_types"];
         $mainId = $resultsN["mainId"];
-        $resultsR = $em->getRepository("JdmapiBundle:Relation")->getRelsFromType($urlencodedterm, "*");
-        $relations = array(
-            "incoming_rels_from_types" => $resultsR["incoming_rels_from_types"],
-            "outgoing_rels_from_types" => $resultsR["outgoing_rels_from_types"]
-        );
+
+        // Affichage d'un message si pas de définition pour le mot
+        if (isset($resultsN["definitions"]["message"])) {
+            $this->session->getFlashBag()->add("info", $resultsN["definitions"]["message"]);
+            $definitions = array();
+
+        // Une ou des définitions existent pour le mot.
+        // On désérialise le tableau pour le renvoyer dans les resultats
+        } else {
+            $definitions = $resultsN["definitions"]["definitions"];
+        }
+
+        $resultsR = $em->getRepository("JdmapiBundle:Relation")->getRelsFromTypes($urlencodedterm, "*");
 
         $em->getRepository("JdmapiBundle:Node")->setConnectionChannelUtf8();
 
         // Insertion des noeuds dans la base de donnée
         //******************************************************
-
-        // echo "<p>mainid $mainId </p>";
-        // exit();
 
         // Pour chaque type de noeuds
         foreach ($nodes_from_types as $typeId => $nodes) {
@@ -351,10 +307,6 @@ class NodeController extends Controller
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
                     continue;
                 }
-
-
-
-
                 $returned = $em->getRepository("JdmapiBundle:Node")->insert($typeId, $nodeData);
             }
         }
@@ -423,15 +375,7 @@ class NodeController extends Controller
 
                 $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
             }
-
         }
-
-        // $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
-        //
-        // $results = $this->sortFinal($results) ;
-        //
-        // return $results ;
-
         // return array(
         //   //  "nodes" => $nodes_from_types,
         //     "relations" => array("incoming" => $resultsR["incoming_rels_from_types"],
