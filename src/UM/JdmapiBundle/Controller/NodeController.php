@@ -224,13 +224,16 @@ class NodeController extends Controller
         // Le terme est présent dans la base locale en tant que terme principal : requête la base locale
         if (is_numeric($this->id) && $this->id > 0) {
 
-            echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
             $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
             $results = $this->sortFinal($results) ;
+
+
+
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
+
         else {
 
           //  echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
@@ -254,6 +257,8 @@ class NodeController extends Controller
                // $results = array(
                //     "relationsEntrantes" => $incoming_nodes,
                //     "relationsSortantes" => $outgoing_nodes);
+
+
 
            }
 
@@ -322,7 +327,8 @@ class NodeController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
-                    $mainData["definitions"] = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
+                    $def = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
+                    $mainData["definitions"] = explode('"', $def, 2)[1];
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
 
                     continue;
