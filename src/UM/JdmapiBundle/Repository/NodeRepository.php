@@ -184,7 +184,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                     (N.id = R.id_node AND R.id_node2 = D.id)
                   )
                  ";
-            $orderBy = "ORDER BY is_relin DESC, weight_rel DESC";
+            // $orderBy = "ORDER BY is_relin DESC, weight_rel DESC";
 
             if ($excludeRelin) {
                 // AND is_relin = 0
@@ -214,7 +214,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 $where .= "AND D.id_type IN(" . trim($nodeTypes, ",") . ") ";
             }
 
-            $sql = $select . $from . $where . $orderBy;
+            $sql = $select . $from . $where; // . $orderBy
 
 //            echo "<pre>";
 //            echo "\$sql = $sql";

@@ -171,17 +171,17 @@ class NodeController extends Controller
         //var_dump(utf8_encode(rawurldecode($urlencodedterm)));
 
         $urlencodedterm = utf8_encode(rawurldecode($urlencodedterm));
-        $id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
+        $this->id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
 
         $previousState = $this->get('jdmapi.batch')->setMaxResourcesState();
 
         // Le terme est présent dans la base locale en tant que terme principal : requête la base locale
-        if (is_numeric($id) && $id > 0) {
+        if (is_numeric($this->id) && $this->id > 0) {
 
             echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
             $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
-            $results = $em->getRepository("JdmapiBundle:Node")->get($id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
+            $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
             $results = $this->sortFinal($results) ;
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
