@@ -6,6 +6,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 use UM\JdmapiBundle\Entity\node;
 use UM\JdmapiBundle\Entity\Node_type;
@@ -176,11 +177,54 @@ class NodeController extends Controller
 
   }
 
+  public function rootAction(Request $request) {
+
+
+    return $this->render('root.html.twig');
+
+  }
+
+
 	/*
 	 * Requête JDMAPI portant sur un terme
 	 * */
-	public function getAction(Request $request, String $urlencodedterm, String $reldir, Int $returnresults,
-                              String $reltypes = "all", String $nodetypes = "all") {
+
+	public function getAction(Request $request) {
+
+       $out = 0;
+       $in = 0;
+
+
+       $rel_type_out_list = $request->query->get('type_rel_out');
+       $rel_type_in_list = $request->query->get('type_rel_in');
+
+       $reltypes = "all";
+       $nodetypes = "all" ;
+       $returnresults = 0;
+       
+       $urlencodedterm = $request->query->get('urlencodedterm');
+       $out = $request->query->get('out');
+       $in = $request->query->get('in');
+
+       if ( ($out == 1 && $in == 1) || ($out == 0 && $in == 0))
+       {
+         $reldir = "both";
+       }
+
+       else if ( $out == 1 && $in == 0)
+       {
+         $reldir = "relout";
+       }
+
+       else 
+       {
+         $reldir = "relin";
+       }
+
+
+
+
+
 
 	    /*
 	     *  Test de présence du mot dans la base locale

@@ -15,247 +15,56 @@
 </head>
 
 <body>
+
+        
+
     <nav class="navbar navbar-inverse">
-        <div class="container-fluid">
+
+            <!-- Brand and toggle get grouped for better mobile display -->
+    
             <div class="navbar-header">
-                <img src="{{ asset('logo.png') }}" style=" width:200px;position:relative;left:5px;top:10px;margin-right: 80px;">
+    
+                    <a href="/">
+                <img src="{{ asset('logo.png') }}" style=" width:120px;height:30px;position:relative;left:5px;top:10px;margin-right:40px;">
+                    </a>
+    
             </div>
-            <ul class="nav navbar-nav">
+    
+            <!-- Collection of nav links, forms, and other content for toggling -->
+    
+            <div id="navbarCollapse" class="collapse navbar-collapse">
 
-                <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Relations
-                        Sortante/Entrantes <span class="caret"></span></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" data-value="option2" tabIndex="0"><input type="checkbox" />&nbsp;Afficher les
-                                relations Sortantes</a></li>
-                        <li><a href="#" data-value="option2" tabIndex="1"><input type="checkbox" />&nbsp;Afficher les
-                                relations Entrantes</a></li>
-                    </ul>
-                </li>
+                    
 
-
-                <li class="dropdown">
-                    <a onclick="myFunction1()" class=" dropdown-toggle" data-toggle="dropdown" href="#"> Type de noeud
-                        <span class="caret"></span></a>
-                </li>
+    
+                <ul class="nav navbar-nav">
+    
+                   
+                    
+                        <li class="active"><a href="/">Acceuil</a></li>
+        
 
 
-                <li onclick="myFunction2()" class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        Type de relation Entrante <span class="caret"></span></a>
+    
+                </ul>
+    
+               
 
-                </li>
+        
 
-
-
-                <li onclick="myFunction3()" class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        Type de relation Sortante <span class="caret"></span></a>
-
-                </li>
-
-
-
-            </ul>
-
-            <form class="navbar-form navbar-left" autocomplete="off" action="/action_page.php">
-                <div class="form-group" style="margin-left: 40px" id="search">
-                    <input type="text" class="form-control typeahead"  placeholder="Saisissez votre Terme">
-                </div>
-                <button type="submit" class="btn btn-default">Recherche</button>
-            </form>
         </div>
-    </nav>
-
-    <div style="display:none " id="TypeNoeudDiv">
-
-        <div>
-            <p style="margin-left: 20px">Les types des noeuds.</p>
-        </div>
-        <div>
-            <select style="margin-left: 20px" multiple id="TypeNoeud">
-                <option value="0">generic</option>
-                <option value="1">term</option>
-                <option value="2">form</option>
-                <option value="4">pos</option>
-                <option value="6">flpot</option>
-                <option value="8">chunk</option>
-                <option value="9">question</option>
-                <option value="10">relation</option>
-                <option value="12">analogy</option>
-                <option value="18">data</option>
-                <option value="36">data_pot</option>
-                <option value="444">link</option>
-                <option value="666">AKI</option>
-                <option value="777">wikipedia</option>
-                <option value="1002">group</option>
-            </select>
-        </div>
-        <br>
-
-    </div>
-
-    <div style="display: none " id="RelSortantesDiv">
-
-        <p style="margin-left: 20px ;display: inline-block ; width: 10% ">Les relations sortantes.</p>
-        <select style="margin-left: 20px " multiple id="RelSortantes">
-            <option value="0" title="Il est demandé d'énumérer les termes les plus étroitement associés au mot cible... Ce mot vous fait penser à quoi ?">idée
-                associée</option>
-            <option value="1" title="Raffinement sémantique vers un usage particulier du terme source">raffinement
-                sémantique</option>
-            <option value="3" title="Il est demandé de fournir des domaines relatifs au mot cible. Par exemple, pour 'corner', on pourra donner les domaines 'football' ou 'sport'.">domaine</option>
-            <option value="4" title="Partie du discours (Nom, Verbe, Adjectif, Adverbe, etc.)">POS</option>
-            <option value="5" title="Il est demandé d'énumérer les synonymes ou quasi-synonymes de ce terme.">synonyme</option>
-            <option value="6" title="Il est demandé d'énumérer les GENERIQUES/hyperonymes du terme. Par exemple, 'animal' et 'mammifère' sont des génériques de 'chat'.">générique</option>
-            <option value="8" title="Il est demandé d'énumérer des SPECIFIQUES/hyponymes du terme. Par exemple, 'mouche', 'abeille', 'guêpe' pour 'insecte'.">spécifique</option>
-            <option value="9" title="Il faut donner des PARTIES/constituants/éléments (a pour méronymes) du mot cible. Par exemple, 'voiture' a comme parties : 'porte', 'roue', 'moteur', ...">partie</option>
-            <option value="10" title="Il est démandé d'énumérer des 'TOUT' (a pour holonymes)  de l'objet en question. Pour 'main', on aura 'bras', 'corps', 'personne', etc... Le tout est aussi l'ensemble comme 'classe' pour 'élève'.">tout</option>
-            <option value="11" title="A partir d'un terme, il est demandé d'énumérer les locutions, expression ou mots composés en rapport avec ce terme. Par exemple, pour 'moulin', ou pourra avoir 'moulin à vent', 'moulin à eau', 'moulin à café'. Pour 'vendre', on pourra avoir 'vendre la peau de l'ours avant de l'avoir tué', 'vendre à perte', etc..">locution</option>
-            <option value="12" title="(relation interne) potentiel de relation">flpot</option>
-            <option value="13" title="L'agent (qu'on appelle aussi le sujet) est l'entité qui effectue l'action, OU la subit pour des formes passives ou des verbes d'état. Par exemple, dans - Le chat mange la souris -, l'agent est le chat. Des agents typiques de 'courir' peuvent être 'sportif', 'enfant',...">action>agent</option>
-            <option value="14" title="Le patient (qu'on appelle aussi l'objet) est l'entité qui subit l'action. Par exemple dans - Le chat mange la souris -, le patient est la souris. Des patients typiques de manger peuvent être 'viande', 'légume', 'pain', ...">action>patient</option>
-            <option value="15" title="Il est demandé d'énumérer les LIEUX typiques où peut se trouver le terme/objet en question.">chose>lieu</option>
-            <option value="16" title="L'instrument est l'objet avec lequel on fait l'action. Dans - Il mange sa salade avec une fourchette -, fourchette est l'instrument. Des instruments typiques de 'tuer' peuvent être 'arme', 'pistolet', 'poison', ...">action>instrument</option>
-            <option value="17" title="Pour un terme donné, souvent un objet, il est demandé d'en énumérer les CARACtéristiques (adjectifs) possibles/typiques. Par exemple, 'liquide', 'froide', 'chaude', pour 'eau'.">caractéristique</option>
-            <option value="18" title="Informations diverses (plutôt d'ordre lexicales)">data</option>
-            <option value="19" title="Le lemme (par exemple 'mangent a pour lemme  'manger' ; 'avions' a pour lemme 'avion' ou 'avoir').">lemma</option>
-            <option value="20" title="La magnification ou amplification, par exemple - forte fièvre - ou - fièvre de cheval - pour fièvre. Ou encore - amour fou - pour amour, - peur bleue - pour peur.">magn</option>
-            <option value="21" title="L'inverse de la magnification, par exemple - bruine - pour pluie.">antimagn</option>
-            <option value="22" title="Des mots de la même famille lexicale sont demandés (dérivation morphologique, par exemple). Par exemple, pour 'lait' on pourrait mettre 'laitier', 'laitage', 'laiterie', etc.">famille</option>
-            <option value="23" title="Quels sont les objets (des noms) possédant typiquement/possiblement la caractérisque suivante ? Par exemple, 'soleil', 'feu', pour 'chaud'.">caractéristique-1</option>
-            <option value="24" title="Que peut faire ce SUJET ? (par exemple chat => miauler, griffer, etc.)">agent
-                typique-1</option>
-            <option value="25" title="L'instrument est l'objet avec lequel on fait l'action. Dans - Il mange sa salade avec une fourchette -, fourchette est l'instrument. On demande ici, ce qu'on peut faire avec un instrument donné...">instrument>action</option>
-            <option value="26" title="(inverse de r_patient) Que peut-on faire à cet OBJET. Pour 'pomme', on pourrait avoir 'manger', 'croquer', couper', 'éplucher',  etc.">patient-1</option>
-            <option value="27" title="inverse de r_domain : à un domaine, on associe des termes">domaine-1</option>
-            <option value="28" title="A partir d'un lieu, il est demandé d'énumérer ce qui peut typiquement s'y trouver.">lieu>chose</option>
-            <option value="30" title="A partir d'un lieu, énumérer les actions typiques possibles dans ce lieu.">lieu>action</option>
-            <option value="32" title="Pour un terme donné, évoquer des mots liés à des SENTIMENTS ou des EMOTIONS que vous pourriez associer à ce terme. Par exemple, la joie, le plaisir, le dégoût, la peur, la haine, l'amour, l'indifférence, l'envie, avoir peur, horrible, etc.">sentiment</option>
-            <option value="35" title="Quels SENS/SIGNIFICATIONS pouvez vous donner au terme proposé. Il s'agira de termes évoquant chacun des sens possibles, par exemple : 'forces de l'ordre', 'contrat d'assurance', 'police typographique', ... pour 'police'.">sens/signification</option>
-            <option value="36" title="Information sémantique potentielle">information potentielle</option>
-            <option value="41" title="B (que vous devez donner) est une CONSEQUENCE possible de A. A et B sont des verbes ou des noms.  Exemples : tomber -> se blesser ; faim -> voler ; allumer -> incendie ; négligence --> accident ; etc.">conséquence</option>
-            <option value="42" title="B (que vous devez donner) est une CAUSE possible de A. A et B sont des verbes ou des noms.  Exemples : se blesser -> tomber ; vol -> pauvreté ; incendie -> négligence ; mort --> maladie ; etc.">cause</option>
-            <option value="45" title="(interne)">chunk sujet</option>
-            <option value="46" title="(interne)">chunk objet</option>
-            <option value="51" title="Quel est la ou les CHOSES qui sont composés de la MATIERE/SUBSTANCE qui suit (exemple 'bois' -> poutre, table, ...).">matière>objet</option>
-            <option value="52" title="Qu'est ce qui peut SUIVRE temporellement (par exemple Noêl -> jour de l'an, guerre -> paix, jour -> nuit,  pluie -> beau temps, repas -> sieste, etc) le terme suivant :">successeur</option>
-            <option value="53" title="Que peut PRODUIRE le terme ? (par exemple abeille -> miel, usine -> voiture, agriculteur -> blé,  moteur -> gaz carbonique ...)">produit</option>
-            <option value="58" title="Quantificateur(s) typique(s) pour lNouveau dossier 2e terme,  indiquant une quantité. Par exemples, sucre -> grain, morceau - sel -> grain, pincée - herbe -> brin, touffe - ...">quantificateur</option>
-            <option value="59" title="L'équivalent masculin du terme : lionne --> lion.">équivalent masc</option>
-            <option value="60" title="L'équivalent féminin du terme : lion --> lionne.">équivalent fem</option>
-            <option value="64" title="Une instance d'un 'type' est un individu particulier de ce type. Il s'agit d'une entité nommée (personne, lieu, organisation, etc) - par exemple, 'cheval' a pour instance possible 'Jolly Jumper', ou encore 'transatlantique' a pour instance possible 'Titanic'.">a
-                pour instance</option>
-            <option value="66" title="">chunk head</option>
-            <option value="67" title="Similaire/ressemble à ; par exemple le congre est similaire à une anguille, ...">similaire</option>
-            <option value="69" title="Quel est l'ENSEMBLE qui est composé de l'ELEMENT qui suit (par exemple, un essaim est composé d'aveilles)">item>ensemble</option>
-            <option value="72" title="Termes strictement substituables, pour des termes hors du domaine général, et pour la plupart des noms (exemple : endométriose intra-utérine --> adénomyose)">syn_strict</option>
-            <option value="73" title="Qu'est-ce qui est physiquement plus gros que... (la comparaison doit être pertinente)">est
-                plus petit que</option>
-            <option value="74" title="Qu'est-ce qui est physiquement moins gros que... (la comparaison doit être pertinente)">est
-                plus gros que</option>
-            <option value="102" title="De quoi peut se nourir l'animal suivant ?">se nourrit de</option>
-            <option value="106" title="A comme couleur(s)...">couleur</option>
-            <option value="107" title="Cible de la maladie : myxomatose => lapin, rougeole => enfant, ...">a comme
-                cible</option>
-            <option value="109" title="Qu'est ce qui peut PRECEDER temporellement (par exemple -  inverse de successeur) le terme suivant :">prédécesseur</option>
-            <option value="115" title="Pour un SENTIMENT ou EMOTION donné, il est demandé d’énumérer les termes que vous pourriez associer. Par exemple, pour 'joie', on aurait 'cadeau', 'naissance', 'bonne nouvelle', etc.">sentiment-1</option>
-            <option value="126" title="Relation d'incompatibilité pour les génériques. Si A r_isa-incompatible B alors X ne peut pas être à la fois A et B ou alors X est polysémique. Par exemple, poisson r_isa-incompatible oiseau. Colin est à la fois un oiseau et un poisson, donc colin est polysémique.">isa-incompatible</option>
-            <option value="128" title="Relation entre un noeud (quelconque) et un noeud de relation (type = 10) - permet de rendre le graphe connexe même avec les annotations de relations">node2relnode</option>
-            <option value="151" title="Descend de (évolution)...">descend de</option>
-            <option value="155" title="Peut utiliser un objet ou produit (par exemple électricité pour frigo).">make_use_of</option>
-            <option value="333" title="Traduction vers une autre langue.">translation</option>
-            <option value="444" title="Lien vers une ressource externe (WordNet, RadLex, UMLS, Wikipedia, etc...)">link</option>
-            <option value="555" title="co-occurences (non utilisée)">cooccurrence</option>
-            <option value="666" title="(TOTAKI) equivalent pour TOTAKI de l'association libre">aki</option>
-            <option value="777" title="Associations issues de wikipedia...">wiki</option>
-            <option value="999" title="relation d'inhibition, le terme inhibe les termes suivants... ce terme a tendance à exclure le terme associé.">inhib</option>
-            <option value="1002" title="">termgroup</option>
-            <option value="2000" title="">raff sem-1</option>
-        </select>
-        </select>
-
-    </div>
+      
 
 
 
-    <div style="display: none" id="RelEntrantesDiv">
 
-        <p style="margin-left: 20px">Les Relations entrantes.</p>
-        <select multiple id="RelEntrantes">
-            <option value="0" title="Il est demandé d'énumérer les termes les plus étroitement associés au mot cible... Ce mot vous fait penser à quoi ?">idée
-                associée</option>
-            <option value="1" title="Raffinement sémantique vers un usage particulier du terme source">raffinement
-                sémantique</option>
-                <br>  <option value="3" title="Il est demandé de fournir des domaines relatifs au mot cible. Par exemple, pour 'corner', on pourra donner les domaines 'football' ou 'sport'.">domaine</option>
-            <option value="4" title="Partie du discours (Nom, Verbe, Adjectif, Adverbe, etc.)">POS</option>
-            <option value="5" title="Il est demandé d'énumérer les synonymes ou quasi-synonymes de ce terme.">synonyme</option>
-            <option value="6" title="Il est demandé d'énumérer les GENERIQUES/hyperonymes du terme. Par exemple, 'animal' et 'mammifère' sont des génériques de 'chat'.">générique</option>
-            <option value="8" title="Il est demandé d'énumérer des SPECIFIQUES/hyponymes du terme. Par exemple, 'mouche', 'abeille', 'guêpe' pour 'insecte'.">spécifique</option>
-            <option value="9" title="Il faut donner des PARTIES/constituants/éléments (a pour méronymes) du mot cible. Par exemple, 'voiture' a comme parties : 'porte', 'roue', 'moteur', ...">partie</option>
-            <option value="10" title="Il est démandé d'énumérer des 'TOUT' (a pour holonymes)  de l'objet en question. Pour 'main', on aura 'bras', 'corps', 'personne', etc... Le tout est aussi l'ensemble comme 'classe' pour 'élève'.">tout</option>
-            <option value="11" title="A partir d'un terme, il est demandé d'énumérer les locutions, expression ou mots composés en rapport avec ce terme. Par exemple, pour 'moulin', ou pourra avoir 'moulin à vent', 'moulin à eau', 'moulin à café'. Pour 'vendre', on pourra avoir 'vendre la peau de l'ours avant de l'avoir tué', 'vendre à perte', etc..">locution</option>
-            <option value="12" title="(relation interne) potentiel de relation">flpot</option>
-            <option value="13" title="L'agent (qu'on appelle aussi le sujet) est l'entité qui effectue l'action, OU la subit pour des formes passives ou des verbes d'état. Par exemple, dans - Le chat mange la souris -, l'agent est le chat. Des agents typiques de 'courir' peuvent être 'sportif', 'enfant',...">action>agent</option>
-            <option value="14" title="Le patient (qu'on appelle aussi l'objet) est l'entité qui subit l'action. Par exemple dans - Le chat mange la souris -, le patient est la souris. Des patients typiques de manger peuvent être 'viande', 'légume', 'pain', ...">action>patient</option>
-            <br>  <option value="15" title="Il est demandé d'énumérer les LIEUX typiques où peut se trouver le terme/objet en question.">chose>lieu</option>
-            <option value="16" title="L'instrument est l'objet avec lequel on fait l'action. Dans - Il mange sa salade avec une fourchette -, fourchette est l'instrument. Des instruments typiques de 'tuer' peuvent être 'arme', 'pistolet', 'poison', ...">action>instrument</option>
-            <option value="17" title="Pour un terme donné, souvent un objet, il est demandé d'en énumérer les CARACtéristiques (adjectifs) possibles/typiques. Par exemple, 'liquide', 'froide', 'chaude', pour 'eau'.">caractéristique</option>
-            <option value="18" title="Informations diverses (plutôt d'ordre lexicales)">data</option>
-            <option value="19" title="Le lemme (par exemple 'mangent a pour lemme  'manger' ; 'avions' a pour lemme 'avion' ou 'avoir').">lemma</option>
-            <option value="20" title="La magnification ou amplification, par exemple - forte fièvre - ou - fièvre de cheval - pour fièvre. Ou encore - amour fou - pour amour, - peur bleue - pour peur.">magn</option>
-            <option value="21" title="L'inverse de la magnification, par exemple - bruine - pour pluie.">antimagn</option>
-            <option value="22" title="Des mots de la même famille lexicale sont demandés (dérivation morphologique, par exemple). Par exemple, pour 'lait' on pourrait mettre 'laitier', 'laitage', 'laiterie', etc.">famille</option>
-            <option value="23" title="Quels sont les objets (des noms) possédant typiquement/possiblement la caractérisque suivante ? Par exemple, 'soleil', 'feu', pour 'chaud'.">caractéristique-1</option>
-            <option value="24" title="Que peut faire ce SUJET ? (par exemple chat => miauler, griffer, etc.)">agent
-                typique-1</option>
-            <option value="25" title="L'instrument est l'objet avec lequel on fait l'action. Dans - Il mange sa salade avec une fourchette -, fourchette est l'instrument. On demande ici, ce qu'on peut faire avec un instrument donné...">instrument>action</option>
-            <option value="26" title="(inverse de r_patient) Que peut-on faire à cet OBJET. Pour 'pomme', on pourrait avoir 'manger', 'croquer', couper', 'éplucher',  etc.">patient-1</option>
-            <option value="27" title="inverse de r_domain : à un domaine, on associe des termes">domaine-1</option>
-            <option value="28" title="A partir d'un lieu, il est demandé d'énumérer ce qui peut typiquement s'y trouver.">lieu>chose</option>
-            <option value="30" title="A partir d'un lieu, énumérer les actions typiques possibles dans ce lieu.">lieu>action</option>
-            <option value="32" title="Pour un terme donné, évoquer des mots liés à des SENTIMENTS ou des EMOTIONS que vous pourriez associer à ce terme. Par exemple, la joie, le plaisir, le dégoût, la peur, la haine, l'amour, l'indifférence, l'envie, avoir peur, horrible, etc.">sentiment</option>
-            <option value="35" title="Quels SENS/SIGNIFICATIONS pouvez vous donner au terme proposé. Il s'agira de termes évoquant chacun des sens possibles, par exemple : 'forces de l'ordre', 'contrat d'assurance', 'police typographique', ... pour 'police'.">sens/signification</option>
-            <option value="36" title="Information sémantique potentielle">information potentielle</option>
-            <option value="41" title="B (que vous devez donner) est une CONSEQUENCE possible de A. A et B sont des verbes ou des noms.  Exemples : tomber -> se blesser ; faim -> voler ; allumer -> incendie ; négligence --> accident ; etc.">conséquence</option>
-            <option value="42" title="B (que vous devez donner) est une CAUSE possible de A. A et B sont des verbes ou des noms.  Exemples : se blesser -> tomber ; vol -> pauvreté ; incendie -> négligence ; mort --> maladie ; etc.">cause</option>
-            <option value="45" title="(interne)">chunk sujet</option>
-            <option value="46" title="(interne)">chunk objet</option>
-            <option value="51" title="Quel est la ou les CHOSES qui sont composés de la MATIERE/SUBSTANCE qui suit (exemple 'bois' -> poutre, table, ...).">matière>objet</option>
-            <option value="52" title="Qu'est ce qui peut SUIVRE temporellement (par exemple Noêl -> jour de l'an, guerre -> paix, jour -> nuit,  pluie -> beau temps, repas -> sieste, etc) le terme suivant :">successeur</option>
-            <option value="53" title="Que peut PRODUIRE le terme ? (par exemple abeille -> miel, usine -> voiture, agriculteur -> blé,  moteur -> gaz carbonique ...)">produit</option>
-            <option value="58" title="Quantificateur(s) typique(s) pour le terme,  indiquant une quantité. Par exemples, sucre -> grain, morceau - sel -> grain, pincée - herbe -> brin, touffe - ...">quantificateur</option>
-            <option value="59" title="L'équivalent masculin du terme : lionne --> lion.">équivalent masc</option>
-            <option value="60" title="L'équivalent féminin du terme : lion --> lionne.">équivalent fem</option>
-            <option value="64" title="Une instance d'un 'type' est un individu particulier de ce type. Il s'agit d'une entité nommée (personne, lieu, organisation, etc) - par exemple, 'cheval' a pour instance possible 'Jolly Jumper', ou encore 'transatlantique' a pour instance possible 'Titanic'.">a
-                pour instance</option>
-            <option value="66" title="">chunk head</option>
-            <option value="67" title="Similaire/ressemble à ; par exemple le congre est similaire à une anguille, ...">similaire</option>
-            <option value="69" title="Quel est l'ENSEMBLE qui est composé de l'ELEMENT qui suit (par exemple, un essaim est composé d'aveilles)">item>ensemble</option>
-            <option value="72" title="Termes strictement substituables, pour des termes hors du domaine général, et pour la plupart des noms (exemple : endométriose intra-utérine --> adénomyose)">syn_strict</option>
-            <option value="73" title="Qu'est-ce qui est physiquement plus gros que... (la comparaison doit être pertinente)">est
-                plus petit que</option>
-            <option value="74" title="Qu'est-ce qui est physiquement moins gros que... (la comparaison doit être pertinente)">est
-                plus gros que</option>
-            <option value="102" title="De quoi peut se nourir l'animal suivant ?">se nourrit de</option>
-            <option value="106" title="A comme couleur(s)...">couleur</option>
-            <br>  <option value="107" title="Cible de la maladie : myxomatose => lapin, rougeole => enfant, ...">a comme
-                cible</option>
-            <option value="109" title="Qu'est ce qui peut PRECEDER temporellement (par exemple -  inverse de successeur) le terme suivant :">prédécesseur</option>
-            <option value="115" title="Pour un SENTIMENT ou EMOTION donné, il est demandé d’énumérer les termes que vous pourriez associer. Par exemple, pour 'joie', on aurait 'cadeau', 'naissance', 'bonne nouvelle', etc.">sentiment-1</option>
-            <option value="126" title="Relation d'incompatibilité pour les génériques. Si A r_isa-incompatible B alors X ne peut pas être à la fois A et B ou alors X est polysémique. Par exemple, poisson r_isa-incompatible oiseau. Colin est à la fois un oiseau et un poisson, donc colin est polysémique.">isa-incompatible</option>
-            <option value="128" title="Relation entre un noeud (quelconque) et un noeud de relation (type = 10) - permet de rendre le graphe connexe même avec les annotations de relations">node2relnode</option>
-            <option value="151" title="Descend de (évolution)...">descend de</option>
-            <option value="155" title="Peut utiliser un objet ou produit (par exemple électricité pour frigo).">make_use_of</option>
-            <option value="333" title="Traduction vers une autre langue.">translation</option>
-            <option value="444" title="Lien vers une ressource externe (WordNet, RadLex, UMLS, Wikipedia, etc...)">link</option>
-            <option value="555" title="co-occurences (non utilisée)">cooccurrence</option>
-            <option value="666" title="(TOTAKI) equivalent pour TOTAKI de l'association libre">aki</option>
-            <option value="777" title="Associations issues de wikipedia...">wiki</option>
-            <option value="999" title="relation d'inhibition, le terme inhibe les termes suivants... ce terme a tendance à exclure le terme associé.">inhib</option>
-            <option value="1002" title="">termgroup</option>
-            <option value="2000" title="">raff sem-1</option>
-        </select>
+        </nav>
+    
+    
 
-        <br>
+    
 
-    </div>
+    
 
 
 
@@ -270,6 +79,8 @@
             var y = document.getElementById("ypeNoeud");
             var x = document.getElementById("TypeNoeudDiv");
             x.style.display = "block";
+            var y = document.getElementById("Filtrage");
+            y.style.display = "block";
 
         }
 
@@ -281,6 +92,8 @@
             $("#RelEntrantes").multiselect("show");
             var x = document.getElementById("RelEntrantesDiv");
             x.style.display = "block";
+            var y = document.getElementById("Filtrage");
+            y.style.display = "block";
 
         }
 
@@ -292,6 +105,8 @@
             $("#RelSortantes").multiselect("show");
             var x = document.getElementById("RelSortantesDiv");
             x.style.display = "block";
+            var y = document.getElementById("Filtrage");
+            y.style.display = "block";
 
         }
 
@@ -311,7 +126,7 @@
         });
     </script>
 
-    {% block body%}
+    {% block data%}
     {% endblock %}
 </body>
 

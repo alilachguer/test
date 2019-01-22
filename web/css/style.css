@@ -2,6 +2,47 @@
     font-family: 'Times New Roman', Times, serif;
   } */
 
+  
+  
+  
+  #llink{
+    z-index: -1;
+}
+
+
+a{
+z-index: 1;
+}
+  
+  /* Main marketing message and sign up button */
+  .jumbotron {
+    text-align: center;
+    border-bottom: .05rem solid #e5e5e5;
+  }
+
+
+  
+  /* Responsive: Portrait tablets and up */
+  @media screen and (min-width: 48em) {
+    /* Remove the padding we set earlier */
+    .header,
+    .marketing,
+    .footer {
+      padding-right: 0;
+      padding-left: 0;
+    }
+    /* Space out the masthead */
+    .header {
+      margin-bottom: 2rem;
+    }
+    /* Remove the bottom border on the jumbotron for visual effect */
+    .jumbotron {
+      border-bottom: 0;
+    }
+  }
+
+
+
 .panel-heading{
     padding-top: 5px;
 }

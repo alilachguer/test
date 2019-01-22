@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+ {% block data%}
+
+
+
+     <div class="jumbotron">
+        <h1 class="display-3">Jeux de Mots</h1>
+        <p class="lead">Dictionnaire d'associations lexicale contributif et libre de JeuxDeMots.</p>
+        <form action="/node/get">
+              <input type="text" name ="urlencodedterm" class="form-control" placeholder="Entrer votre mots....">
+              <br>
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="submit">Recherche</button>
+              </span>
+        </form>
+      </div>
+
+ {% endblock%}
+
+
+
+
+
