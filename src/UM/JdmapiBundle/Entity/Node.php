@@ -74,6 +74,13 @@ class Node
     }
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="definitions", type="text", nullable=true)
+     */
+    private $definitions;
+
+    /**
      * Set id
      *
      * @return node
@@ -186,4 +193,3 @@ class Node
         return $this->formattedName;
     }
 }
-

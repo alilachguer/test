@@ -85,9 +85,9 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             }
         }*/
 
-        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main, definitions) 
-                VALUES (?, ?, ?, ?, ?, 1, ?)
-                ON DUPLICATE KEY UPDATE 
+        $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main, definitions)
+                VALUES (?, ?, ?, ?, ?, 1, 'daf')
+                ON DUPLICATE KEY UPDATE
                 name = VALUES(name),
                 id_type = VALUES(id_type),
                 weight = VALUES(weight),
@@ -103,7 +103,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $insertStmt->bindValue(3, /*type*/ $data["type"]);
         $insertStmt->bindValue(4, /*weight*/ $data["weight"]);
         $insertStmt->bindValue(5, /*formatted_name*/ $data["formatted_name"]);
-        $insertStmt->bindValue(6, /*formatted_name*/ $data["definitions"]);
+        //$insertStmt->bindValue(6, /*formatted_name*/ $data["definitions"]);
 
 //            echo "<pre>";
 //            print_r($data);
@@ -156,7 +156,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 N.weight AS main_node_weight,
                 N.formatted_name AS main_node_formatted_name,
                 N.definitions AS main_node_serialized_definition_array,
-                
+
                 D.id AS rel_node_id,
                 D.name AS rel_node_name,
                 D.id_type AS rel_node_id_type,

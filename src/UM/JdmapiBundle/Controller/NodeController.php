@@ -304,7 +304,9 @@ class NodeController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
+
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
+
                     continue;
                 }
                 $returned = $em->getRepository("JdmapiBundle:Node")->insert($typeId, $nodeData);
