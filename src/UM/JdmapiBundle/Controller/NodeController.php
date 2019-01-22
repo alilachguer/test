@@ -304,6 +304,7 @@ class NodeController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
+                    $mainData["definitions"] = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
                     continue;
                 }
@@ -380,7 +381,8 @@ class NodeController extends Controller
         //   //  "nodes" => $nodes_from_types,
         //     "relations" => array("incoming" => $resultsR["incoming_rels_from_types"],
         //                          "outgoing" => $resultsR["outgoing_rels_from_types"]  ));
-          //  "mainId" => $mainId);
+        //  "mainId" => $mainId,
+        //            "definitions" => $definitions);
     }
 
 }
