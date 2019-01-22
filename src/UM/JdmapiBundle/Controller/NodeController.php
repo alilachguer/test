@@ -166,6 +166,32 @@ class NodeController extends Controller
        $rel_type_out_list = $request->query->get('type_rel_out');
        $rel_type_in_list = $request->query->get('type_rel_in');
 
+
+
+
+       if( $rel_type_in_list != null  )
+
+       {
+
+         $rel_type_in_list = array_map('intval', $rel_type_in_list);
+
+
+
+       }
+
+       if( $rel_type_out_list != null  )
+
+       {
+
+         $rel_type_out_list = array_map('intval', $rel_type_out_list);
+
+
+
+       }
+
+
+
+
        $reltypes = "all";
        $nodetypes = "all" ;
        $returnresults = 0;
@@ -273,7 +299,10 @@ class NodeController extends Controller
         // Affiche un récupitalatif (mode debug)
         else {
             // return $this->render('@Jdmapi/node/get.html.twig', array("results" => $results));
-            return $this->render('body.html.twig', array("results" => $results));
+
+
+            $main_Name = $results['relationsSortantes'][0][0]['main_node_name'];
+            return $this->render('body.html.twig', array("results" => $results,"name" => $main_Name, "rel_type_in_list" => $rel_type_in_list , "rel_type_out_list" => $rel_type_out_list));
 
         }
    }
@@ -327,8 +356,8 @@ class NodeController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
-                    $def = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
-                    $mainData["definitions"] = explode('"', $def, 2)[1];
+                    $mainData["definitions"]  = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
+                    // $mainData["definitions"] = explode('"', $def, 2)[1];
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
 
                     continue;
