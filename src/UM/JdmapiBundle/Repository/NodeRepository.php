@@ -182,10 +182,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             $where = "WHERE N.id = ?
                  AND (
                     /* Relation entrante */
-                    (N.id = R.id_node2 AND R.id_node = D.id AND D.id = T.id)
+                    (N.id = R.id_node2 AND R.id_node = D.id AND D.id_type = T.id)
                     OR
                     /* Relation sortante */
-                    (N.id = R.id_node AND R.id_node2 = D.id AND D.id = T.id)
+                    (N.id = R.id_node AND R.id_node2 = D.id AND D.id_type = T.id)
                   )
                  ";
             // $orderBy = "ORDER BY is_relin DESC, weight_rel DESC";
@@ -221,6 +221,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             $sql = $select . $from . $where; // . $orderBy
 
 //            echo "<pre>";
+//            echo "\$nodeId = $nodeId";
 //            echo "\$sql = $sql";
 //            echo "</pre>";
 //            exit();
@@ -386,7 +387,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
-        echo "<p>\$url = $url</p>";
+        //echo "<p>\$url = $url</p>";
 
         // Exclusion des relations entrantes
         if (in_array($relDir, array("relout", "none"))) {
