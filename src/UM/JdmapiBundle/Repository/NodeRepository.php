@@ -174,7 +174,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 
                 T.name AS type_rel_name,
                 T.formatted_name AS type_rel_fname,
-                T.descrption AS type_rel_desc
+                T.description AS type_rel_desc
                 ";
 
             $from = "FROM node N, node D, relation R, relation_type T
@@ -220,10 +220,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
             $sql = $select . $from . $where; // . $orderBy
 
-            echo "<pre>";
-            echo "\$sql = $sql";
-            echo "</pre>";
-            exit();
+//            echo "<pre>";
+//            echo "\$sql = $sql";
+//            echo "</pre>";
+//            exit();
 
             $stmt = $conn->executeQuery($sql, array($nodeId));
             $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection1][$sortDirection2] = $stmt;
@@ -386,7 +386,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
-        // echo "<p>\$url = $url</p>";
+        echo "<p>\$url = $url</p>";
 
         // Exclusion des relations entrantes
         if (in_array($relDir, array("relout", "none"))) {

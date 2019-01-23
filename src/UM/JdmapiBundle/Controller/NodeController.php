@@ -243,7 +243,7 @@ class NodeController extends Controller
             $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
-            $results = $this->sortFinal($results) ;
+            $results = $this->sortFinal($results);
 
 
 
@@ -264,20 +264,12 @@ class NodeController extends Controller
              //  echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
 
                $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
-
-
-
-                 $results = $this->sortFinal($results) ;
-
+               $results = $this->sortFinal($results);
 
                // $results = array(
                //     "relationsEntrantes" => $incoming_nodes,
                //     "relationsSortantes" => $outgoing_nodes);
-
-
-
            }
-
         }
 
         $this->get('jdmapi.batch')->resetResourcesStateToPrevious($previousState);
@@ -290,10 +282,34 @@ class NodeController extends Controller
         else {
             // return $this->render('@Jdmapi/node/get.html.twig', array("results" => $results));
 
+            $main_Name = $request->query->get("urlencodedterm");
 
-            $main_Name = $results['relationsSortantes'][0][0]['main_node_name'];
-            return $this->render('body.html.twig', array("results" => $results,"name" => $main_Name, "rel_type_in_list" => $rel_type_in_list , "rel_type_out_list" => $rel_type_out_list));
+            if (!empty($results['relationsSortantes'])
+                && isset($results['relationsSortantes'][0]) && isset($results['relationsSortantes'][0][0])
+                && isset($results['relationsSortantes'][0][0]['main_node_name'])
+                && !empty($results['relationsSortantes'][0][0]['main_node_name'])) {
 
+                return $this->render('body.html.twig',
+                                     array("results" => $results,
+                                           "name" => $main_Name,
+                                           "rel_type_in_list" => $rel_type_in_list ,
+                                           "rel_type_out_list" => $rel_type_out_list,
+                                           "is_empty" => false));
+            }
+            else {
+                $usrMsg = "Pas de relation sortantes trouvées pour ce nœud.";
+                echo "<p>$usrMsg</p>";
+                $results['relationsSortantes'][0] = array();
+                $results['relationsSortantes'][0][0] = array();
+                $results['relationsSortantes'][0][0]['main_node_serialized_definition_array'] = $usrMsg;
+                $this->session->getFlashBag()->add("info", $usrMsg);
+                return $this->render('body.html.twig',
+                                        array("results" => $results,
+                                            "name" => $main_Name,
+                                            "rel_type_in_list" => $rel_type_in_list ,
+                                            "rel_type_out_list" => $rel_type_out_list,
+                                            "is_empty" => true));
+            }
         }
    }
 
