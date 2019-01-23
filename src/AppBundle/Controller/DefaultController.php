@@ -20,8 +20,14 @@ class DefaultController extends Controller
         ob_start();
         phpinfo();
         $phpinfo = ob_get_clean();
+        $results = array();
+
+        $results["relationsEntrantes"] = array();
+        $results["relationsSortantes"] = array();
 
         // replace this example code with whatever you need
-        return $this->render('body.html.twig');
+        return $this->render('body.html.twig', array(
+            "results" => $results
+        ));
     }
 }

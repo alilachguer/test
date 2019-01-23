@@ -170,18 +170,22 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 R.id_type AS id_type_rel,
                 R.weight AS weight_rel,
                 (R.id_node2 = N.id) AS is_relin,
-                (R.id_node = N.id) AS is_relout
+                (R.id_node = N.id) AS is_relout,
+                
+                T.name AS type_rel_name,
+                T.formatted_name AS type_rel_fname,
+                T.descrption AS type_rel_desc
                 ";
 
-            $from = "FROM node N, relation R, node D
+            $from = "FROM node N, node D, relation R, relation_type T
                 ";
             $where = "WHERE N.id = ?
                  AND (
                     /* Relation entrante */
-                    (N.id = R.id_node2 AND R.id_node = D.id)
+                    (N.id = R.id_node2 AND R.id_node = D.id AND D.id = T.id)
                     OR
                     /* Relation sortante */
-                    (N.id = R.id_node AND R.id_node2 = D.id)
+                    (N.id = R.id_node AND R.id_node2 = D.id AND D.id = T.id)
                   )
                  ";
             // $orderBy = "ORDER BY is_relin DESC, weight_rel DESC";
@@ -216,10 +220,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
             $sql = $select . $from . $where; // . $orderBy
 
-//            echo "<pre>";
-//            echo "\$sql = $sql";
-//            echo "</pre>";
-//            exit();
+            echo "<pre>";
+            echo "\$sql = $sql";
+            echo "</pre>";
+            exit();
 
             $stmt = $conn->executeQuery($sql, array($nodeId));
             $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection1][$sortDirection2] = $stmt;

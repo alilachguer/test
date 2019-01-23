@@ -156,12 +156,10 @@ class NodeController extends Controller
 	/*
 	 * Requête JDMAPI portant sur un terme
 	 * */
-
 	public function getAction(Request $request) {
 
        $out = 0;
        $in = 0;
-
 
        $rel_type_out_list = $request->query->get('type_rel_out');
        $rel_type_in_list = $request->query->get('type_rel_in');
@@ -200,25 +198,17 @@ class NodeController extends Controller
        $out = $request->query->get('out');
        $in = $request->query->get('in');
 
-       if ( ($out == 1 && $in == 1) || ($out == 0 && $in == 0))
-       {
+       if ( ($out == 1 && $in == 1) || ($out == 0 && $in == 0)) {
          $reldir = "both";
        }
 
-       else if ( $out == 1 && $in == 0)
-       {
+       else if ( $out == 1 && $in == 0) {
          $reldir = "relout";
        }
 
-       else
-       {
+       else {
          $reldir = "relin";
        }
-
-
-
-
-
 
         $this->session = $request->getSession();
 	    /*
