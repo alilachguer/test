@@ -278,6 +278,8 @@ class RelationRepository extends \Doctrine\ORM\EntityRepository
                 $this->stmts["insert"] = $insertStmt;
             }
 
+            
+
             $insertStmt->bindValue(1, /*id*/ $relData["id"]);
             $insertStmt->bindValue(2, /*id_node1*/ $relData["id_node1"]);
             $insertStmt->bindValue(3, /*id_node2*/ $relData["id_node2"]);

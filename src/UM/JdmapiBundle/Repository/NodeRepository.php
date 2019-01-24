@@ -85,6 +85,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             }
         }*/
 
+
+
         $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main, definitions)
                 VALUES (?, ?, ?, ?, ?, 1, ?)
                 ON DUPLICATE KEY UPDATE
@@ -170,12 +172,17 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 R.id_type AS id_type_rel,
                 R.weight AS weight_rel,
                 (R.id_node2 = N.id) AS is_relin,
-                (R.id_node = N.id) AS is_relout
+                (R.id_node = N.id) AS is_relout,
+                T.name as type_name
+
                 ";
 
-            $from = "FROM node N, relation R, node D
+            $from = "FROM node N, relation R, node D , relation_type T
                 ";
             $where = "WHERE N.id = ?
+
+                 AND  T.id = R.id_type 
+
                  AND (
                     /* Relation entrante */
                     (N.id = R.id_node2 AND R.id_node = D.id)
@@ -183,6 +190,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                     /* Relation sortante */
                     (N.id = R.id_node AND R.id_node2 = D.id)
                   )
+
                  ";
             // $orderBy = "ORDER BY is_relin DESC, weight_rel DESC";
 
@@ -220,6 +228,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //            echo "\$sql = $sql";
 //            echo "</pre>";
 //            exit();
+
 
             $stmt = $conn->executeQuery($sql, array($nodeId));
             $this->stmts["get"][$excludeRelin][$excludeRelout][$filterNodeType][$filterRelType][$sortDirection1][$sortDirection2] = $stmt;

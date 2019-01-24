@@ -29,6 +29,43 @@ class NodeController extends Controller
       return ($a["id_type_rel"] - $b["id_type_rel"]);
     }
 
+    public function cmppweightAsc($a,$b) {
+      return ($a["rel_node_weight"] - $b["rel_node_weight"]);
+    }
+
+    public function cmppweightDesc($a,$b) {
+      return ($b["rel_node_weight"] - $a["rel_node_weight"]);
+    }
+
+    public function sortweight($array) 
+    
+    {
+      $arr = $array ;
+
+      
+      for  ($j=0 ; $j<sizeof($arr['relationsSortantes']);$j++ )
+      {
+        // dump($type);
+        usort($arr['relationsSortantes'][$j],array($this,"cmppweightAsc"));
+        // dump($type);
+        // exit();
+
+      }
+
+      for  ($j=0 ; $j<sizeof($arr['relationsEntrantes']);$j++ )
+      {
+        // dump($type);
+        usort($arr['relationsEntrantes'][$j],array($this,"cmppweightAsc"));
+        // dump($type);
+        // exit();
+
+      }
+
+    return $arr ;
+    }
+
+
+
     public function sortFinal($results) {
 
       $incoming_nodes = [];
@@ -44,6 +81,7 @@ class NodeController extends Controller
        }
 
         usort($incoming_nodes,array($this,"cmpp"));
+
         usort($outgoing_nodes,array($this,"cmpp"));
 
         $incoming_nodesfinal = [];
@@ -76,6 +114,11 @@ class NodeController extends Controller
 
         }
 
+        if( $this->i != -1) 
+         {
+            array_push($outgoing_nodesfinal, ${"arrayoftype" . $this->i});
+         }
+
 
         foreach ($incoming_nodes as $key => $value) {
 
@@ -99,6 +142,12 @@ class NodeController extends Controller
           }
 
         }
+
+        if( $this->j != -1) 
+        {
+           array_push($incoming_nodesfinal, ${"arrayoftype" . $this->j});
+        }
+
 
         $results = array ($incoming_nodesfinal,$outgoing_nodesfinal ) ;
         $results = array(
@@ -141,9 +190,7 @@ class NodeController extends Controller
          $em->flush();
 	}
 
-  function cmp($a, $b){
 
-  }
 
   public function rootAction(Request $request) {
 
@@ -159,8 +206,28 @@ class NodeController extends Controller
 
 	public function getAction(Request $request) {
 
+      
+
        $out = 0;
        $in = 0;
+
+       $rel = $request->query->get('rel');
+
+       if($rel != null)
+
+       {
+
+       if (in_array("0", $rel)) {
+        $out = 1;
+      }
+
+      if (in_array("1", $rel)) {
+        $in = 1;
+      }
+    }
+
+
+
 
 
        $rel_type_out_list = $request->query->get('type_rel_out');
@@ -194,15 +261,16 @@ class NodeController extends Controller
 
        $reltypes = "all";
        $nodetypes = "all" ;
+
        $returnresults = 0;
 
        $urlencodedterm = $request->query->get('urlencodedterm');
-       $out = $request->query->get('out');
-       $in = $request->query->get('in');
+
 
        if ( ($out == 1 && $in == 1) || ($out == 0 && $in == 0))
        {
          $reldir = "both";
+
        }
 
        else if ( $out == 1 && $in == 0)
@@ -214,6 +282,7 @@ class NodeController extends Controller
        {
          $reldir = "relin";
        }
+
 
 
 
@@ -300,9 +369,20 @@ class NodeController extends Controller
         else {
             // return $this->render('@Jdmapi/node/get.html.twig', array("results" => $results));
 
+            // dump($results['relationsSortantes'][]);
+            // exit();
+            if($results['relationsSortantes'] != null)
+            {
+              $main_Name = $results['relationsSortantes'][0][0]['main_node_name'];
+              $definition = $results['relationsSortantes'][0][0]['main_node_serialized_definition_array'];
 
-            $main_Name = $results['relationsSortantes'][0][0]['main_node_name'];
-            return $this->render('body.html.twig', array("results" => $results,"name" => $main_Name, "rel_type_in_list" => $rel_type_in_list , "rel_type_out_list" => $rel_type_out_list));
+            }
+            else {
+              $main_Name = $results['relationsEntrantes'][0][0]['main_node_name'];
+              $definition = $results['relationsEntrantes'][0][0]['main_node_serialized_definition_array'];
+            }
+            $results=$this->sortweight($results);
+            return $this->render('body.html.twig', array("results" => $results,"name" => $main_Name, "rel_type_in_list" => $rel_type_in_list , "rel_type_out_list" => $rel_type_out_list,"definition"=>$definition));
 
         }
    }
@@ -348,8 +428,14 @@ class NodeController extends Controller
 
                 // Le noeud principal est déjà enregistré en tant que tel
                 // on le passe.
+
+                
+
+
                 if ($nodeData[1] === $mainId) {
 
+                    
+                   
                     $mainData = array();
                     $mainData["id"] = $mainId;
                     $mainData["name"] = $nodeData[2];
@@ -362,10 +448,12 @@ class NodeController extends Controller
 
                     continue;
                 }
+
                 $returned = $em->getRepository("JdmapiBundle:Node")->insert($typeId, $nodeData);
             }
         }
         // Enregistrement du noeud principal en tant que tel
+
         $em->getRepository("JdmapiBundle:Node")->insertMain($mainData);
 
 
@@ -377,6 +465,7 @@ class NodeController extends Controller
         foreach ($resultsR["incoming_rels_from_types"] as $type_id => $relations) {
 
             $this->buffer .="<hr /><p>Incoming relations of type : <pre>$type_id</pre></p>";
+
 
             foreach ($relations as $index => $relationData) {
 
@@ -395,9 +484,12 @@ class NodeController extends Controller
                 $relDataParam["type_id"] = $type_id;
                 $relDataParam["weight"] = $weight;
 
+
                 $em->getRepository("JdmapiBundle:Relation")->insert($relDataParam);
             }
         }
+
+
 
 
         // Insertion des relations sortantes pour ce noeud
