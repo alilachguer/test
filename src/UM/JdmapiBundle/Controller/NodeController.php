@@ -74,11 +74,39 @@ class NodeController extends Controller
 
 
 
+  function compareByName($a, $b) 
+  {
+    return strcmp($a["rel_node_name"], $b["rel_node_name"]);
+  }
 
 
 
+  public function SortAlpha ($array) 
+  
+  {
+
+    $arr = $array ;
+ 
+
+      
+      for  ($j=0 ; $j<sizeof($arr['relationsEntrantes']);$j++ )
+      {
+        usort($arr['relationsEntrantes'][$j],array($this,"compareByName"));
+      }
 
 
+
+      for  ($j=0 ; $j<sizeof($arr['relationsSortantes']);$j++ )
+      {
+         
+        usort($arr['relationsSortantes'][$j],array($this,"compareByName"));
+
+      }
+
+
+    return $arr ;
+   
+}
 
     public function cmpp($a,$b) {
       return ($a["id_type_rel"] - $b["id_type_rel"]);
@@ -458,11 +486,26 @@ class NodeController extends Controller
               $definition = $results['relationsEntrantes'][0][0]['main_node_serialized_definition_array'];
             }
 
-            if($this->SortWeight != -1)
+            if($this->SortWeight == 1 || $this->SortWeight == 0 )
             {
               $results=$this->sortweight($results);
 
             }
+             
+
+
+            else if ($this->SortWeight == 2)
+
+            {
+
+              $results=$this->SortAlpha($results);
+
+            }
+
+
+            
+
+            
             return $this->render('body.html.twig', array("results" => $results,"name" => $main_Name, "rel_type_in_list" => $rel_type_in_list , "rel_type_out_list" => $rel_type_out_list,"definition"=>$definition));
 
         }
