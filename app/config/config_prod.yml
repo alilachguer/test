@@ -6,6 +6,30 @@ imports:
 #        metadata_cache_driver: apc
 #        result_cache_driver: apc
 #        query_cache_driver: apc
+doctrine:
+    dbal:
+        #driver: pdo_sqlite
+        url: "%env(CLEARDB_DATABASE_URL)%"
+        driver: pdo_mysql
+        host: '%database_host%'
+        port: '%database_port%'
+        dbname: '%database_name%'
+        user: '%database_user%'
+        password: '%database_password%'
+        charset: UTF8
+        memory: false
+        #path: %kernel.root_dir%/sqlite.db.cache
+        # if using pdo_sqlite as your database driver:
+        #   1. add the path in parameters.yml
+        #     e.g. database_path: '%kernel.project_dir%/var/data/data.sqlite'
+        #   2. Uncomment database_path in parameters.yml.dist
+        #   3. Uncomment next line:
+        #path: '%database_path%'
+
+    orm:
+        auto_generate_proxy_classes: '%kernel.debug%'
+        naming_strategy: doctrine.orm.naming_strategy.underscore
+        auto_mapping: true
 
 monolog:
     handlers:
@@ -15,7 +39,7 @@ monolog:
             handler: nested
         nested:
             type: stream
-            path: '%kernel.logs_dir%/%kernel.environment%.log'
+            path:  "php://stderr"
             level: debug
         console:
             type: console

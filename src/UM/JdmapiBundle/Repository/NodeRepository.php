@@ -2,6 +2,8 @@
 
 namespace UM\JdmapiBundle\Repository;
 
+use Symfony\Component\Serializer\Serializer;
+
 /**
  * nodeRepository
  *
@@ -86,6 +88,14 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         }*/
 
 
+        /***
+        $fp = fopen('mots.json', 'w');
+        $file = file_get_contents('./mots.json', FILE_USE_INCLUDE_PATH);
+        $data = json_decode($file, true);
+        $json = json_decode($file);
+        dump($data);
+        exit();
+         */
 
         $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name, is_main, definitions)
                 VALUES (?, ?, ?, ?, ?, 1, ?)

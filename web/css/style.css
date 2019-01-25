@@ -84,12 +84,12 @@ z-index: 1;
 }
 
 
-#search .empty-message {
+#dd .empty-message {
 padding: 5px 10px;
 text-align: center;
 }
 
-#search .tt-dropdown-menu {
+#dd .tt-dropdown-menu {
     max-height: 80px;
     overflow-y: auto;
   }
@@ -99,7 +99,6 @@ text-align: center;
     width: 100%;
     margin-top: 10px;
     padding: 8px 0;
-    opacity: 0.80;
     background-color: #fff;
     border: 1px solid #ccc;
     border: 1px solid rgba(0, 0, 0, 0.2);
@@ -116,7 +115,6 @@ text-align: center;
 .tt-suggestion.tt-is-under-cursor { /* UPDATE: newer versions use .tt-suggestion.tt-cursor */
     color: #fff;
     background-color: #0097cf;
-
 }
 
 .tt-suggestion p {
