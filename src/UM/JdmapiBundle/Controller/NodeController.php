@@ -23,6 +23,61 @@ class NodeController extends Controller
     protected $i  ;
     protected $j  ;
     protected $id ;
+    protected $SortWeight = -1;
+
+    
+    public function hyphenize($string) {
+      $dict = array(
+          "I'm"      => "I am",
+          "thier"    => "their",
+          // Add your own replacements here
+      );
+      return strtolower(
+          preg_replace(
+            array( '#[\\s-]+#', '#[^A-Za-z0-9\. -]+#' ),
+            array('-',''),
+            // the full cleanString() can be downloaded from http://www.unexpectedit.com/php/php-clean-string-of-utf8-chars-convert-to-similar-ascii-char
+            $this->cleanString(
+                str_replace( // preg_replace can be used to support more complicated replacements
+                    array_keys($dict),
+                    array_values($dict),
+                    urldecode($string)
+                )
+            )
+          )
+      );
+  }
+  
+  public function cleanString($text) {
+      $utf8 = array(
+          '/[áàâãªä]/u'   =>   'a',
+          '/[ÁÀÂÃÄ]/u'    =>   'A',
+          '/[ÍÌÎÏ]/u'     =>   'I',
+          '/[íìîï]/u'     =>   'i',
+          '/[éèêë]/u'     =>   'e',
+          '/[ÉÈÊË]/u'     =>   'E',
+          '/[óòôõºö]/u'   =>   'o',
+          '/[ÓÒÔÕÖ]/u'    =>   'O',
+          '/[úùûü]/u'     =>   'u',
+          '/[ÚÙÛÜ]/u'     =>   'U',
+          '/ç/'           =>   'c',
+          '/Ç/'           =>   'C',
+          '/ñ/'           =>   'n',
+          '/Ñ/'           =>   'N',
+          '/–/'           =>   '-', // UTF-8 hyphen to "normal" hyphen
+          '/[’‘‹›‚]/u'    =>   ' ', // Literally a single quote
+          '/[“”«»„]/u'    =>   ' ', // Double quote
+          '/ /'           =>   ' ', // nonbreaking space (equiv. to 0x160)
+      );
+      return preg_replace(array_keys($utf8), array_values($utf8), $text);
+  }
+
+
+
+
+
+
+
 
 
     public function cmpp($a,$b) {
@@ -42,22 +97,34 @@ class NodeController extends Controller
     {
       $arr = $array ;
 
+
       
-      for  ($j=0 ; $j<sizeof($arr['relationsSortantes']);$j++ )
+      for  ($j=0 ; $j<sizeof($arr['relationsEntrantes']);$j++ )
       {
-        // dump($type);
-        usort($arr['relationsSortantes'][$j],array($this,"cmppweightAsc"));
-        // dump($type);
-        // exit();
+
+        if($this->SortWeight == 1 )
+        {
+          usort($arr['relationsEntrantes'][$j],array($this,"cmppweightAsc"));
+
+        }
+        else {
+          usort($arr['relationsEntrantes'][$j],array($this,"cmppweightDesc"));
+
+        }
 
       }
 
-      for  ($j=0 ; $j<sizeof($arr['relationsEntrantes']);$j++ )
+      for  ($j=0 ; $j<sizeof($arr['relationsSortantes']);$j++ )
       {
-        // dump($type);
-        usort($arr['relationsEntrantes'][$j],array($this,"cmppweightAsc"));
-        // dump($type);
-        // exit();
+        if($this->SortWeight == 1 )
+        {
+          usort($arr['relationsSortantes'][$j],array($this,"cmppweightAsc"));
+
+        }
+        else {
+          usort($arr['relationsSortantes'][$j],array($this,"cmppweightDesc"));
+
+        }
 
       }
 
@@ -228,6 +295,15 @@ class NodeController extends Controller
 
 
 
+    if( $request->query->get('SortWeight') != null)
+
+ {
+
+    $this->SortWeight =  $request->query->get('SortWeight') ;
+
+ }
+
+
 
 
        $rel_type_out_list = $request->query->get('type_rel_out');
@@ -381,7 +457,12 @@ class NodeController extends Controller
               $main_Name = $results['relationsEntrantes'][0][0]['main_node_name'];
               $definition = $results['relationsEntrantes'][0][0]['main_node_serialized_definition_array'];
             }
-            $results=$this->sortweight($results);
+
+            if($this->SortWeight != -1)
+            {
+              $results=$this->sortweight($results);
+
+            }
             return $this->render('body.html.twig', array("results" => $results,"name" => $main_Name, "rel_type_in_list" => $rel_type_in_list , "rel_type_out_list" => $rel_type_out_list,"definition"=>$definition));
 
         }
@@ -393,20 +474,26 @@ class NodeController extends Controller
     public function getRemote(String $urlencodedterm) {
 
         $em = $this->getDoctrine()->getManager();
-        $resultsN = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, "*");
+        $resultsN = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, "");
         $nodes_from_types = $resultsN["nodes_from_types"];
         $mainId = $resultsN["mainId"];
+        $definitions="";
 
         // Affichage d'un message si pas de définition pour le mot
-        if (isset($resultsN["definitions"]["message"])) {
-            $this->session->getFlashBag()->add("info", $resultsN["definitions"]["message"]);
-            $definitions = array();
+        if (isset($resultsN["definitions"]["message"])) 
+        {
 
-        // Une ou des définitions existent pour le mot.
-        // On désérialise le tableau pour le renvoyer dans les resultats
-        } else {
-            $definitions = $resultsN["definitions"]["definitions"];
+            $definitions = "Ce mots n'a pas de définition"; 
+
+        } 
+        
+        else {
+          for  ($j=0 ; $j<sizeof($resultsN['definitions']['definitions']);$j++ )
+          $definitions = $definitions.$resultsN["definitions"]['definitions'][$j];
+
+
         }
+
 
         $resultsR = $em->getRepository("JdmapiBundle:Relation")->getRelsFromTypes($urlencodedterm, "*");
 
@@ -429,7 +516,17 @@ class NodeController extends Controller
                 // Le noeud principal est déjà enregistré en tant que tel
                 // on le passe.
 
+                $nodeData[2] = utf8_encode ($nodeData[2] ) ;
+
+                $nodeData[2] = $this->hyphenize($nodeData[2]);
                 
+                if (strpos( $nodeData[2], '\\' ) !== false || strpos( $nodeData[2], '?' ) !== false || strpos( $nodeData[2], '/' ) !== false || strpos( $nodeData[2], "'" ) !== false || strpos( $nodeData[2], '0' ) !== false  )             
+                
+                {
+                  continue ; 
+                }
+
+              
 
 
                 if ($nodeData[1] === $mainId) {
@@ -442,12 +539,13 @@ class NodeController extends Controller
                     $mainData["type"] = $typeId;
                     $mainData["weight"] = $nodeData[3];
                     $mainData["formatted_name"] = $nodeData[5] ?? "";
-                    $mainData["definitions"]  = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
-                    // $mainData["definitions"] = explode('"', $def, 2)[1];
+                    //$mainData["definitions"]  = isset($resultsN["definitions"]["definitions"]) ? serialize($resultsN["definitions"]["definitions"]) : "";
+                    $mainData["definitions"] = $definitions;
                     // Enregistrement de ces données après les itérations d'insertion de ses relations ci-dessous.
 
                     continue;
                 }
+ 
 
                 $returned = $em->getRepository("JdmapiBundle:Node")->insert($typeId, $nodeData);
             }

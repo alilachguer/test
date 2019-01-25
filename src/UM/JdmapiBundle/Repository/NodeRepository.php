@@ -173,7 +173,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 R.weight AS weight_rel,
                 (R.id_node2 = N.id) AS is_relin,
                 (R.id_node = N.id) AS is_relout,
-                T.name as type_name
+                T. formatted_name as type_name
 
                 ";
 
@@ -248,7 +248,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
      */
     public function insert(Int $typeId, array $nodeData) {
 
-        try {
+       
             $em = $this->getEntityManager();
 
             if (isset($this->stmts["insert"]) && is_object($this->stmts["insert"])
@@ -256,6 +256,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 $insertStmt = $this->stmts["insert"];
 
             } else {
+
+
+               
+            
                 // SQLite Upsert
                 /*$sql = "INSERT OR REPLACE INTO node (id, name, id_type, weight, formatted_name)
                             VALUES (?, ?, ?, ?, ?)
@@ -277,31 +281,34 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 $insertStmt = $em->getConnection()->prepare($sql);
                 $this->stmts["insert"] = $insertStmt;
             }
-
+             
+            
             $name = $nodeData[2] ?? null;
+
             $weight = $nodeData[3] ?? null;
             $formattedName = $nodeData[5] ?? null;
-
-            //$decodedName = $this->convertUtf8codes(urldecode($name));
-            $decodedName = trim(urldecode($name), " \t\n\r\0\x0B'");
-            $decodedName = $this->convertUtf8codes($decodedName);
-
             // echo "<p>Node ID = {$nodeData[1]}<br />";
             // echo "Node \$decodedName = "+ $decodedName +"<br />";
             // echo "Node \$weight = $weight<br />";
             // echo "Node \$formattedName = $formattedName</p>";
 
             $insertStmt->bindValue(1, /*id*/ $nodeData[1]);
-            $insertStmt->bindValue(2, /*name*/ $decodedName);
+            $insertStmt->bindValue(2, /*name*/  $name);
             $insertStmt->bindValue(3, /*type*/ $typeId);
             $insertStmt->bindValue(4, /*weight*/ $weight);
             $insertStmt->bindValue(5, /*formatted_name*/ $formattedName);
 
-            $insertStmt->execute();
+        
 
-        } catch (\PDOException $e) {
-            echo "<p>Inserting of word « $decodedName » has thrown an exception : '". $e->getMessage() ."'.</p>";
-        }
+            try{
+                $Success=$insertStmt->execute();
+                if(!$Success){}
+                }
+                catch(PDOException $e)
+                {
+                }
+
+
     }
 
 
@@ -366,7 +373,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         } else {
             $definitions = $this->splitDefinitions($matches[0]);
         }
+
+
         return $definitions;
+
     }
 
     // Renvoie les différentes définitions d'un mot dans un tableau
@@ -472,6 +482,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             // On les range dans un tableau
             $nodes_from_types[$typeId] = $matches;
         }
+
         return array("nodes_from_types" => $nodes_from_types, "mainId" => $mainId, "definitions" => $definitions);
     }
 

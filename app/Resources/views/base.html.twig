@@ -109,6 +109,18 @@
 
         }
 
+         function myFunction4() {
+            $("#RelSortantes").multiselect({
+                title: "Type de filtre"
+            });
+            $("#SortWeight").multiselect("show");
+            var x = document.getElementById("SortWeightDiv");
+            x.style.display = "block";
+            var y = document.getElementById("Filtrage");
+            y.style.display = "block";
+
+        }
+
         var countries = new Bloodhound({
         datumTokenizer: Bloodhound.tokenizers.whitespace,
         queryTokenizer: Bloodhound.tokenizers.whitespace,
