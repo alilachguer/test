@@ -124,6 +124,15 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 //            exit();
 
         $insertStmt->execute();
+
+        $file = file_get_contents("./mots.json", FILE_USE_INCLUDE_PATH);
+        $json_data = json_decode($file,true);
+        array_push($json_data,$data["name"]);
+        dump($json_data);
+        $new_json = json_encode($json_data);
+        file_put_contents("./mots.json", $new_json, LOCK_EX);
+
+
     }
 
     /*
