@@ -10,6 +10,8 @@
     <!-- <link rel="stylesheet" href="css/bootstrap3.min.css"> -->
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/multiselect.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"></script>
 
     <title>Document</title>
 </head>
@@ -59,20 +61,22 @@
 
 
         </nav>
-    
-    
 
-    
 
-    
+
+
+
+    {% block data%}
+    {% endblock %}
 
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="http://harshniketseta.github.io/popupMultiSelect/dist/javascripts/multiselect.min.js"></script>
-    <script src="{{ asset('js/typeahead.bundle.js')}}"></script>
-    <script src="{{ asset('js/script.js') }}"></script>
+    <script src="http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"></script>
+    <script src="{{ asset('js/typeahead.jquery.js') }}"></script>
+    <script src="{{ asset('js/typeahead.bundle.js') }}"></script>
     <script>
         function myFunction1() {
             $("#RelinRelout").multiselect("show");
@@ -114,19 +118,18 @@
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         // url points to a json file that contains an array of country names, see
         // https://github.com/twitter/typeahead.js/blob/gh-pages/data/countries.json
-        prefetch: './countries.json'
+        prefetch: '{{ asset('mots.json') }}'
         });
 
         // passing in `null` for the `options` arguments will result in the default
         // options being used
-        $('#search .typeahead').typeahead(null, {
+        $('#dd .typeahead').typeahead(null, {
         name: 'countries',
         source: countries
         });
     </script>
 
-    {% block data%}
-    {% endblock %}
+
 </body>
 
 </html>
