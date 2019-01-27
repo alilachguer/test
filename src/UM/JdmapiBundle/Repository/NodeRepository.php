@@ -131,8 +131,6 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         dump($json_data);
         $new_json = json_encode($json_data);
         file_put_contents("./mots.json", $new_json, LOCK_EX);
-
-
     }
 
     /*
@@ -276,9 +274,6 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
             } else {
 
-
-               
-            
                 // SQLite Upsert
                 /*$sql = "INSERT OR REPLACE INTO node (id, name, id_type, weight, formatted_name)
                             VALUES (?, ?, ?, ?, ?)
@@ -289,8 +284,8 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                             formatted_name = excluded.formatted_name;";*/
 
                 // MySQL Upsert
-                $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name,is_main)
-						VALUES (?, ?, ?, ?, ?,0)
+                $sql = "INSERT INTO node (id, name, id_type, weight, formatted_name)
+						VALUES (?, ?, ?, ?, ?)
                         ON DUPLICATE KEY UPDATE
                         name = VALUES(name),
                         id_type = VALUES(id_type),
@@ -300,24 +295,26 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 $insertStmt = $em->getConnection()->prepare($sql);
                 $this->stmts["insert"] = $insertStmt;
             }
-             
             
             $name = $nodeData[2] ?? null;
 
             $weight = $nodeData[3] ?? null;
             $formattedName = $nodeData[5] ?? null;
-            // echo "<p>Node ID = {$nodeData[1]}<br />";
-            // echo "Node \$decodedName = "+ $decodedName +"<br />";
-            // echo "Node \$weight = $weight<br />";
-            // echo "Node \$formattedName = $formattedName</p>";
+
+            //$decodedName = $this->convertUtf8codes(urldecode($name));
+            $decodedName = trim(urldecode($name), " \t\n\r\0\x0B'");
+            $decodedName = $this->convertUtf8codes($decodedName);
+
+             echo "<p>Node ID = {$nodeData[1]}<br />";
+             echo "\$decodedName = $decodedName<br />";
+             echo "\$weight = $weight<br />";
+             echo "\$formattedName = $formattedName</p>";
 
             $insertStmt->bindValue(1, /*id*/ $nodeData[1]);
-            $insertStmt->bindValue(2, /*name*/  $name);
+            $insertStmt->bindValue(2, /*name*/  $decodedName);
             $insertStmt->bindValue(3, /*type*/ $typeId);
             $insertStmt->bindValue(4, /*weight*/ $weight);
             $insertStmt->bindValue(5, /*formatted_name*/ $formattedName);
-
-        
 
             try{
                 $Success=$insertStmt->execute();
@@ -326,9 +323,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
                 catch(PDOException $e)
                 {
                 }
-
-
-    }
+   }
 
 
     public static function convertUtf8codes(string $word) {
@@ -420,7 +415,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
-        // echo "<p>\$url = $url</p>";
+        echo "<p>\$url = $url</p>";
 
         // Exclusion des relations entrantes
         if (in_array($relDir, array("relout", "none"))) {
@@ -436,6 +431,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         // après l'opération
         $default_socket_timeout = ini_get('default_socket_timeout');
         ini_set('default_socket_timeout', 60*3);
+
+//        $context = array("http" => array("timeout" => 60*3));
+//        $src = file_get_contents($url, false, $context);
+
         $src = file_get_contents($url);
         //$src = file_get_contents("rezo-dump_source_cheval.html");
         ini_set('default_socket_timeout', $default_socket_timeout);

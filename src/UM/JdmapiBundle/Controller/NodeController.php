@@ -35,15 +35,9 @@ class NodeController extends Controller
       return strtolower(
           preg_replace(
             array( '#[\\s-]+#', '#[^A-Za-z0-9\. -]+#' ),
-            array('-',''),
+            array('-', ''),
             // the full cleanString() can be downloaded from http://www.unexpectedit.com/php/php-clean-string-of-utf8-chars-convert-to-similar-ascii-char
-            $this->cleanString(
-                str_replace( // preg_replace can be used to support more complicated replacements
-                    array_keys($dict),
-                    array_values($dict),
-                    urldecode($string)
-                )
-            )
+            $this->cleanString($string)
           )
       );
   }
@@ -72,41 +66,24 @@ class NodeController extends Controller
       return preg_replace(array_keys($utf8), array_values($utf8), $text);
   }
 
-
-
-  function compareByName($a, $b) 
-  {
+  function compareByName($a, $b) {
     return strcmp($a["rel_node_name"], $b["rel_node_name"]);
   }
 
-
-
-  public function SortAlpha ($array) 
-  
-  {
+  public function SortAlpha ($array) {
 
     $arr = $array ;
- 
 
-      
-      for  ($j=0 ; $j<sizeof($arr['relationsEntrantes']);$j++ )
-      {
+      for  ($j=0 ; $j<sizeof($arr['relationsEntrantes']);$j++ ){
         usort($arr['relationsEntrantes'][$j],array($this,"compareByName"));
       }
 
-
-
-      for  ($j=0 ; $j<sizeof($arr['relationsSortantes']);$j++ )
-      {
-         
+      for  ($j=0 ; $j<sizeof($arr['relationsSortantes']);$j++ ) {
         usort($arr['relationsSortantes'][$j],array($this,"compareByName"));
-
       }
 
-
     return $arr ;
-   
-}
+    }
 
     public function cmpp($a,$b) {
       return ($a["id_type_rel"] - $b["id_type_rel"]);
@@ -120,13 +97,9 @@ class NodeController extends Controller
       return ($b["rel_node_weight"] - $a["rel_node_weight"]);
     }
 
-    public function sortweight($array) 
-    
-    {
+    public function sortweight($array) {
       $arr = $array ;
 
-
-      
       for  ($j=0 ; $j<sizeof($arr['relationsEntrantes']);$j++ )
       {
 
@@ -176,7 +149,6 @@ class NodeController extends Controller
        }
 
         usort($incoming_nodes,array($this,"cmpp"));
-
         usort($outgoing_nodes,array($this,"cmpp"));
 
         $incoming_nodesfinal = [];
@@ -205,27 +177,20 @@ class NodeController extends Controller
           } else {
             array_push(${"arrayoftype".$this->i}, $value);
           }
-
-
         }
 
-        if( $this->i != -1) 
-         {
+        if( $this->i != -1) {
             array_push($outgoing_nodesfinal, ${"arrayoftype" . $this->i});
          }
 
 
         foreach ($incoming_nodes as $key => $value) {
 
-
           if ($value['id_type_rel'] != $this->j)
           {
-
-                      if( $this->j == -1) {}
-                      else {
-                        array_push($incoming_nodesfinal, ${"arrayoftype" . $this->j});
-
-                           }
+            if( $this->j !== -1) {
+            array_push($incoming_nodesfinal, ${"arrayoftype" . $this->j});
+            }
 
             $this->j = $value['id_type_rel'] ;
             ${"arrayoftype".$this->j} = [] ;
@@ -238,13 +203,11 @@ class NodeController extends Controller
 
         }
 
-        if( $this->j != -1) 
-        {
+        if( $this->j != -1)  {
            array_push($incoming_nodesfinal, ${"arrayoftype" . $this->j});
         }
 
 
-        $results = array ($incoming_nodesfinal,$outgoing_nodesfinal ) ;
         $results = array(
                "relationsSortantes" => $incoming_nodesfinal,
                "relationsEntrantes" => $outgoing_nodesfinal);
@@ -283,16 +246,11 @@ class NodeController extends Controller
 		 $type_relation->setName("isa");
 
          $em->flush();
-	}
+    }
 
-
-
-  public function rootAction(Request $request) {
-
-
-    return $this->render('root.html.twig');
-
-  }
+    public function rootAction(Request $request) {
+        return $this->render('root.html.twig');
+    }
 
 
 	/*
@@ -300,98 +258,55 @@ class NodeController extends Controller
 	 * */
 
 	public function getAction(Request $request) {
-
-      
-
        $out = 0;
        $in = 0;
 
        $rel = $request->query->get('rel');
 
-       if($rel != null)
+       if($rel != null) {
 
-       {
+           if (in_array("0", $rel)) {
+            $out = 1;
+          }
 
-       if (in_array("0", $rel)) {
-        $out = 1;
-      }
+          if (in_array("1", $rel)) {
+            $in = 1;
+          }
+        }
 
-      if (in_array("1", $rel)) {
-        $in = 1;
-      }
-    }
-
-
-
-    if( $request->query->get('SortWeight') != null)
-
- {
-
-    $this->SortWeight =  $request->query->get('SortWeight') ;
-
- }
-
-
-
+        if( $request->query->get('SortWeight') != null) {
+            $this->SortWeight =  $request->query->get('SortWeight') ;
+        }
 
        $rel_type_out_list = $request->query->get('type_rel_out');
        $rel_type_in_list = $request->query->get('type_rel_in');
 
-
-
-
-       if( $rel_type_in_list != null  )
-
-       {
+       if ( $rel_type_in_list != null ) {
 
          $rel_type_in_list = array_map('intval', $rel_type_in_list);
-
-
-
        }
 
-       if( $rel_type_out_list != null  )
-
-       {
+       if( $rel_type_out_list != null  ) {
 
          $rel_type_out_list = array_map('intval', $rel_type_out_list);
-
-
-
        }
-
-
-
 
        $reltypes = "all";
        $nodetypes = "all" ;
-
        $returnresults = 0;
-
        $urlencodedterm = $request->query->get('urlencodedterm');
 
-
-       if ( ($out == 1 && $in == 1) || ($out == 0 && $in == 0))
-       {
+       if ( ($out == 1 && $in == 1) || ($out == 0 && $in == 0)) {
          $reldir = "both";
-
        }
 
-       else if ( $out == 1 && $in == 0)
-       {
+       else if ( $out == 1 && $in == 0) {
          $reldir = "relout";
        }
 
-       else
-       {
+       else {
          $reldir = "relin";
        }
-
-
-
-
-
-
 
         $this->session = $request->getSession();
 	    /*
@@ -421,45 +336,47 @@ class NodeController extends Controller
         $previousState = $this->get('jdmapi.batch')->setMaxResourcesState();
 
         // Le terme est présent dans la base locale en tant que terme principal : requête la base locale
-        if (is_numeric($this->id) && $this->id > 0) {
+
+        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        // SUPPRIMER false APRES DEBUG
+        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        if (is_numeric($this->id) && $this->id > 0 && false) {
 
             $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
             $results = $this->sortFinal($results) ;
-
-
-
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
-
         else {
 
-          //  echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
-          $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.");
+              //  echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
+              $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.");
 
-            //$results = $this->getRemote($request, $urlencodedterm);
-            $this->getRemote($urlencodedterm);
+              //$results = $this->getRemote($request, $urlencodedterm);
+              $this->getRemote($urlencodedterm);
+              $this->id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
 
-            $this->id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
-           if (is_numeric($this->id) && $this->id > 0) {
+               if (is_numeric($this->id) && $this->id > 0) {
 
-             //  echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+                   // echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
 
-               $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
+                   $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
 
+//                   echo "<pre>";
+//                   echo "<p>Dans getAction() cas requête distante, requête locale après insertion</p>";
+//                   print_r($results);
+//                   echo "</pre>";
+//                   exit();
 
+                   $results = $this->sortFinal($results) ;
 
-                 $results = $this->sortFinal($results) ;
+                   // $results = array(
+                   //     "relationsEntrantes" => $incoming_nodes,
+                   //     "relationsSortantes" => $outgoing_nodes);
 
-
-               // $results = array(
-               //     "relationsEntrantes" => $incoming_nodes,
-               //     "relationsSortantes" => $outgoing_nodes);
-
-
-
-           }
+               }
 
         }
 
@@ -480,34 +397,30 @@ class NodeController extends Controller
               $main_Name = $results['relationsSortantes'][0][0]['main_node_name'];
               $definition = $results['relationsSortantes'][0][0]['main_node_serialized_definition_array'];
 
-            }
-            else {
+            } else {
               $main_Name = $results['relationsEntrantes'][0][0]['main_node_name'];
               $definition = $results['relationsEntrantes'][0][0]['main_node_serialized_definition_array'];
             }
 
-            if($this->SortWeight == 1 || $this->SortWeight == 0 )
-            {
-              $results=$this->sortweight($results);
+            if($this->SortWeight == 1 || $this->SortWeight == 0 ) {
+              $results = $this->sortweight($results);
 
             }
-             
-
-
-            else if ($this->SortWeight == 2)
-
-            {
-
-              $results=$this->SortAlpha($results);
-
+            else if ($this->SortWeight == 2) {
+              $results = $this->SortAlpha($results);
             }
 
+//              echo "<pre>";
+//              echo "<p>Dans getAction()</p>";
+//              print_r($results);
+//              echo "</pre>";
+//              exit();
 
-            
-
-            
-            return $this->render('body.html.twig', array("results" => $results,"name" => $main_Name, "rel_type_in_list" => $rel_type_in_list , "rel_type_out_list" => $rel_type_out_list,"definition"=>$definition));
-
+            return $this->render('body.html.twig', array("results" => $results,
+                                                              "name" => $main_Name,
+                                                              "rel_type_in_list" => $rel_type_in_list ,
+                                                              "rel_type_out_list" => $rel_type_out_list,
+                                                              "definition" => $definition));
         }
    }
 
@@ -518,23 +431,24 @@ class NodeController extends Controller
 
         $em = $this->getDoctrine()->getManager();
         $resultsN = $em->getRepository("JdmapiBundle:Node")->getNodesFromTypes($urlencodedterm, "");
+
+//        echo "<pre>";
+//        echo "<p>Dans getRemote()</p>";
+//        print_r($resultsN);
+//        echo "</pre>";
+//        exit();
+
         $nodes_from_types = $resultsN["nodes_from_types"];
         $mainId = $resultsN["mainId"];
         $definitions="";
 
         // Affichage d'un message si pas de définition pour le mot
-        if (isset($resultsN["definitions"]["message"])) 
-        {
-
+        if (isset($resultsN["definitions"]["message"])) {
             $definitions = "Ce mot n'a pas de définition.";
+        } else {
 
-        } 
-        
-        else {
           for  ($j=0 ; $j<sizeof($resultsN['definitions']['definitions']);$j++ )
-            $definitions = $definitions.$resultsN["definitions"]['definitions'][$j];
-
-
+                $definitions = $definitions.$resultsN["definitions"]['definitions'][$j];
         }
 
 
@@ -556,26 +470,20 @@ class NodeController extends Controller
             // Pour chaque noeud de ce type
             foreach ($nodes as $index => $nodeData) {
 
-                // Le noeud principal est déjà enregistré en tant que tel
-                // on le passe.
-
-                $nodeData[2] = utf8_encode ($nodeData[2] ) ;
-
-                $nodeData[2] = $this->hyphenize($nodeData[2]);
+                $nodeData[2] = utf8_encode($nodeData[2] );
+                //$nodeData[2] = $this->hyphenize($nodeData[2]);
                 
-                if (strpos( $nodeData[2], '\\' ) !== false || strpos( $nodeData[2], '?' ) !== false || strpos( $nodeData[2], '/' ) !== false || strpos( $nodeData[2], "'" ) !== false || strpos( $nodeData[2], '0' ) !== false  )             
-                
-                {
+                if (strpos( $nodeData[2], '\\' ) !== false ||
+                    strpos( $nodeData[2], '?' ) !== false ||
+                    strpos( $nodeData[2], '/' ) !== false ||
+                    strpos( $nodeData[2], "'" ) !== false ||
+                    strpos( $nodeData[2], '0' ) !== false  ) {
                   continue ; 
                 }
 
-              
-
-
+                // Le noeud principal est déjà enregistré en tant que tel
+                // on le passe.
                 if ($nodeData[1] === $mainId) {
-
-                    
-                   
                     $mainData = array();
                     $mainData["id"] = $mainId;
                     $mainData["name"] = $nodeData[2];
