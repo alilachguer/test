@@ -341,17 +341,20 @@ class NodeController extends Controller
         // SUPPRIMER false APRES DEBUG
         //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        if (is_numeric($this->id) && $this->id > 0 && false) {
+        if (is_numeric($this->id) && $this->id > 0 ) {
+
 
             $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
             $results = $this->sortFinal($results) ;
+
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
         else {
 
-              //  echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
+               //echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
+
               $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.");
 
               //$results = $this->getRemote($request, $urlencodedterm);
@@ -360,8 +363,7 @@ class NodeController extends Controller
 
                if (is_numeric($this->id) && $this->id > 0) {
 
-                   // echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
-
+                   //echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
                    $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
 
 //                   echo "<pre>";
