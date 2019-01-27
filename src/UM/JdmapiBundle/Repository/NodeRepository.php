@@ -305,10 +305,10 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             $decodedName = trim(urldecode($name), " \t\n\r\0\x0B'");
             $decodedName = $this->convertUtf8codes($decodedName);
 
-             echo "<p>Node ID = {$nodeData[1]}<br />";
-             echo "\$decodedName = $decodedName<br />";
-             echo "\$weight = $weight<br />";
-             echo "\$formattedName = $formattedName</p>";
+            //  echo "<p>Node ID = {$nodeData[1]}<br />";
+            //  echo "\$decodedName = $decodedName<br />";
+            //  echo "\$weight = $weight<br />";
+            //  echo "\$formattedName = $formattedName</p>";
 
             $insertStmt->bindValue(1, /*id*/ $nodeData[1]);
             $insertStmt->bindValue(2, /*name*/  $decodedName);
@@ -339,13 +339,13 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
             $codePoint = $match[0];
             $hexa = substr($codePoint, 4);
 
-            echo "<p>\$word = $word</p>";
-            echo "<p>\$codePoint = $codePoint</p>";
-            echo "<p>\$hexa = $hexa</p>";
+            // echo "<p>\$word = $word</p>";
+            // echo "<p>\$codePoint = $codePoint</p>";
+            // echo "<p>\$hexa = $hexa</p>";
 
             $ascii = hexdec($hexa);
 
-            echo "<p>\$ascii = $ascii</p>";
+            // echo "<p>\$ascii = $ascii</p>";
 
             if (is_int($ascii)) {
                 $char = chr($ascii);
@@ -415,7 +415,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
         $urlencodedterm = rawurlencode(utf8_decode($urlencodedterm));
         $url = "http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={$urlencodedterm}";
 
-        echo "<p>\$url = $url</p>";
+        //echo "<p>\$url = $url</p>";
 
         // Exclusion des relations entrantes
         if (in_array($relDir, array("relout", "none"))) {

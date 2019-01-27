@@ -470,7 +470,7 @@ class NodeController extends Controller
             // Pour chaque noeud de ce type
             foreach ($nodes as $index => $nodeData) {
 
-                $nodeData[2] = utf8_encode($nodeData[2] );
+                $nodeData[2] = utf8_encode($nodeData[2]);
                 //$nodeData[2] = $this->hyphenize($nodeData[2]);
                 
                 if (strpos( $nodeData[2], '\\' ) !== false ||
