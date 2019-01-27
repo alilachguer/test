@@ -434,7 +434,6 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
 //        $context = array("http" => array("timeout" => 60*3));
 //        $src = file_get_contents($url, false, $context);
-
         $src = file_get_contents($url);
         //$src = file_get_contents("rezo-dump_source_cheval.html");
         ini_set('default_socket_timeout', $default_socket_timeout);

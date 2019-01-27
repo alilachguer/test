@@ -150,7 +150,7 @@
                                                 <div class="panel">
                                                     <h4 class="panel-title">
                                                         <a  data-parent="#accordion{{rel['id_type_rel']}}"
-                                                            href="/node/get?urlencodedterm={{rel['rel_node_name']}}">
+                                                            href="/node/get?urlencodedterm={{rel['rel_node_name']|convert_encoding('ISO-8859-1', 'UTF-8')|url_encode}}">
                                                             <h4><b>{{rel['rel_node_name']}} : {{rel['rel_node_weight']}} </b></h4>
                                                         </a>
                                                     </h4>
@@ -186,7 +186,7 @@
                                                   <div class="panel">
                                                       <h4 class="panel-title">
                                                           <a  data-parent="#accordion{{rel['id_type_rel']}}"
-                                                              href="/node/get?urlencodedterm={{rel['rel_node_name']}}">
+                                                              href="/node/get?urlencodedterm={{rel['rel_node_name']|convert_encoding('ISO-8859-1', 'UTF-8')furl_encode|url_encode}}">
                                                               <h4><b>{{rel['rel_node_name']}} : {{rel['rel_node_weight']}} </b></h4>
                                                           </a>
                                                       </h4>

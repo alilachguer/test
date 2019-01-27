@@ -82,7 +82,7 @@ class NodeController extends Controller
         usort($arr['relationsSortantes'][$j],array($this,"compareByName"));
       }
 
-    return $arr ;
+      return $arr ;
     }
 
     public function cmpp($a,$b) {
@@ -330,31 +330,23 @@ class NodeController extends Controller
 
         //var_dump(utf8_encode(rawurldecode($urlencodedterm)));
 
-        $urlencodedterm = utf8_encode(rawurldecode($urlencodedterm));
+        //$urlencodedterm = utf8_encode(rawurldecode($urlencodedterm));
         $this->id = $em->getRepository("JdmapiBundle:Node")->existsLocally($urlencodedterm);
 
         $previousState = $this->get('jdmapi.batch')->setMaxResourcesState();
 
         // Le terme est présent dans la base locale en tant que terme principal : requête la base locale
-
-        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        // SUPPRIMER false APRES DEBUG
-        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-        if (is_numeric($this->id) && $this->id > 0 ) {
-
+        if (is_numeric($this->id) && $this->id > 0) {
 
             $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.");
 
             $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
             $results = $this->sortFinal($results) ;
-
         }
         // Le terme n'est pas présent dans la base locale : requête sur le site distant
         else {
 
-               //echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
-
+              //  echo "<p>Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.</p>";
               $this->session->getFlashBag()->add("notice", "Le terme « $urlencodedterm » n'est pas trouvé localement. Requête DISTANTE.");
 
               //$results = $this->getRemote($request, $urlencodedterm);
@@ -363,7 +355,8 @@ class NodeController extends Controller
 
                if (is_numeric($this->id) && $this->id > 0) {
 
-                   //echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+                   // echo "<p>Le terme « $urlencodedterm » est trouvé localement. Requête LOCALE.</p>";
+
                    $results = $em->getRepository("JdmapiBundle:Node")->get($this->id, $excludeRelout, $excludeRelin, $reltypes, $nodetypes);
 
 //                   echo "<pre>";
@@ -394,7 +387,7 @@ class NodeController extends Controller
 
             // dump($results['relationsSortantes'][]);
             // exit();
-            if($results['relationsSortantes'] != null)
+            if ($results['relationsSortantes'] != null)
             {
               $main_Name = $results['relationsSortantes'][0][0]['main_node_name'];
               $definition = $results['relationsSortantes'][0][0]['main_node_serialized_definition_array'];
@@ -404,7 +397,7 @@ class NodeController extends Controller
               $definition = $results['relationsEntrantes'][0][0]['main_node_serialized_definition_array'];
             }
 
-            if($this->SortWeight == 1 || $this->SortWeight == 0 ) {
+            if ($this->SortWeight == 1 || $this->SortWeight == 0 ) {
               $results = $this->sortweight($results);
 
             }
@@ -472,7 +465,7 @@ class NodeController extends Controller
             // Pour chaque noeud de ce type
             foreach ($nodes as $index => $nodeData) {
 
-                $nodeData[2] = utf8_encode($nodeData[2]);
+                //$nodeData[2] = utf8_encode($nodeData[2] );
                 //$nodeData[2] = $this->hyphenize($nodeData[2]);
                 
                 if (strpos( $nodeData[2], '\\' ) !== false ||
@@ -581,5 +574,49 @@ class NodeController extends Controller
         //  "mainId" => $mainId,
         //            "definitions" => $definitions);
     }
+
+    public static function convertUtf8codes(string $word) {
+
+        $pattern = "/\x{0000}-\x{ffff}/u";
+        $match = array();
+        $return = $word;
+
+        //  echo "<p>\$word in convertUtf8codes = $word</p>";
+
+        while (preg_match($pattern, $word,$match)) {
+
+            $codePoint = $match[0];
+            $hexa = substr($codePoint, 4);
+
+            // echo "<p>\$word = $word</p>";
+            // echo "<p>\$codePoint = $codePoint</p>";
+            // echo "<p>\$hexa = $hexa</p>";
+
+            $ascii = hexdec($hexa);
+
+            // echo "<p>\$ascii = $ascii</p>";
+
+            if (is_int($ascii)) {
+                $char = chr($ascii);
+                $return = str_replace($hexa, $char, $word);
+            } else {
+                continue;
+            }
+        }
+        //    echo "<p>\$return = $return</p>";
+
+        return $return;
+
+//        $search = array(
+//            "\\u009c",
+//            "\\u00e8"
+//        );
+//       $replace = array(
+//           "œ",
+//           "è"
+//       );
+//       return str_replace($search, $replace, $word);
+    }
+
 
 }
