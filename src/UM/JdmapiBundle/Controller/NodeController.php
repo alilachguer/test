@@ -526,13 +526,13 @@ class NodeController extends Controller
         if (isset($resultsN["definitions"]["message"])) 
         {
 
-            $definitions = "Ce mots n'a pas de définition"; 
+            $definitions = "Ce mot n'a pas de définition.";
 
         } 
         
         else {
           for  ($j=0 ; $j<sizeof($resultsN['definitions']['definitions']);$j++ )
-          $definitions = $definitions.$resultsN["definitions"]['definitions'][$j];
+            $definitions = $definitions.$resultsN["definitions"]['definitions'][$j];
 
 
         }

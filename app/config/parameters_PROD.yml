@@ -1,13 +1,13 @@
 # This file is auto-generated during the composer install
 parameters:
-    database_host: 127.0.0.1
+    database_host: sql24
 #    database_host: prodpeda-venus
     database_port: null
 #    database_name: bverley
-    database_name: jdmapi
-    database_user: root
+    database_name: kqr82161
+    database_user: kqr82161
 #    database_user: bverley
-    database_password: qinabalu753
+    database_password: jHGdVW2iBZMl
 #    database_password: mariadb
     mailer_transport: smtp
     mailer_host: 127.0.0.1

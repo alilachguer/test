@@ -196,7 +196,7 @@ class NodeRepository extends \Doctrine\ORM\EntityRepository
 
                 ";
 
-            $from = "FROM node N, relation R, node D , relation_type T
+            $from = "FROM node N, node D, relation R, relation_type T
                 ";
             $where = "WHERE N.id = ?
 
